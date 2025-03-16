@@ -1,84 +1,103 @@
 /* TailwindCSS est déjà intégré, mais nous ajoutons quelques styles spécifiques */
 
+/* Base styles */
 .App {
   text-align: center;
 }
 
-/* Style pour les scrollbars */
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Utility classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Scrollbar styles */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: var(--scrollbar-track, #1f2937);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: var(--scrollbar-thumb, #4b5563);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: var(--scrollbar-thumb-hover, #10b981);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-/* Styles pour le texte de type terminal */
+/* Terminal text style */
 .terminal-text {
   font-family: 'Courier New', monospace;
-  color: #10b981;
+  color: var(--terminal-text, #10b981);
 }
 
-/* Styles pour les boutons hover */
-.hover-effect:hover {
-  transform: translateY(-2px);
+/* Interactive elements */
+.hover-effect {
   transition: transform 0.2s ease-in-out;
 }
 
-/* Styles pour les inputs focus */
+.hover-effect:hover {
+  transform: translateY(-2px);
+}
+
+/* Focus styles */
 input:focus, 
 textarea:focus {
-  border: 1px solid #10b981;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 0 2px var(--focus-ring, rgba(16, 185, 129, 0.2));
 }
 
-/* Style pour un effet de "hacker" sur les textes */
-.hacker-text {
-  color: #10b981;
-  text-shadow: 0 0 5px rgba(16, 185, 129, 0.7);
+/* Theme variables */
+:root {
+  --scrollbar-track: #1f2937;
+  --scrollbar-thumb: #4b5563;
+  --scrollbar-thumb-hover: #10b981;
+  --terminal-text: #10b981;
+  --focus-ring: rgba(16, 185, 129, 0.2);
 }
 
-/* Effet de pulsation pour les éléments importants */
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+/* Light theme overrides */
+[data-theme='light'] {
+  --scrollbar-track: #f3f4f6;
+  --scrollbar-thumb: #d1d5db;
+  --scrollbar-thumb-hover: #059669;
+  --terminal-text: #059669;
+  --focus-ring: rgba(5, 150, 105, 0.2);
 }
 
-.pulse {
-  animation: pulse 2s infinite;
-}
-
-/* Pour les appareils mobiles */
+/* Responsive design */
 @media (max-width: 768px) {
   .responsive-layout {
-    flex-direction: column;
+    flex-direction: column !important;
   }
   
   .sidebar {
     width: 100% !important;
-    max-height: 200px;
+    max-height: 200px !important;
   }
 }
 
