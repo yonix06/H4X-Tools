@@ -1,5 +1,5 @@
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import json, aiohttp, asyncio
 from datetime import datetime
@@ -88,6 +88,6 @@ class Search:
             async with session.request(u["method"], url, json=json_body, proxy=None, headers=headers,
                                        ssl=False) as response:
                 if eval(u["valid"]):
-                    printer.success(f'Account found : #{u["id"]} {Style.BRIGHT}{u["app"]}{Style.RESET_ALL} - {url} [{response.status} {response.reason}]')
+                    printer.success(f'#{u["id"]} {Style.BRIGHT}{u["app"]}{Style.RESET_ALL} - {url} [{response.status} {response.reason}]')
         except:
             pass

@@ -1,5 +1,5 @@
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import time, requests
 from helper import printer, timer
@@ -42,8 +42,7 @@ class Scan:
             response.raise_for_status()
             data = response.json()
 
-            printer.info(f"Trying to find information for {Style.BRIGHT}{target}{Style.RESET_ALL}...")
-            time.sleep(1)
+            printer.info(f"Trying to find information for the {target_type} {Style.BRIGHT}{target}{Style.RESET_ALL}...")
 
             for key, value in data.items():
                 if key == "data":

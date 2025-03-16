@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import os, time, socket
 from colorama import Fore, Style
@@ -42,58 +42,51 @@ def print_banner() -> None:
 
 def help() -> None:
     print(Fore.LIGHTCYAN_EX)
-    printer.nonprefix(f"""
-H4X-Tools v{VERSION}, a toolkit for scraping, OSINT and more.
+    print("H4X-Tools v{} - A toolkit for scraping, OSINT and more.".format(VERSION))
+    print("Repository link: https://github.com/vil/h4x-tools")
+    print("\nMade in Finland, with love.\n")
 
-Repository link : https://github.com/vil/h4x-tools
+    print("Available Tools:")
+    print("------------------")
 
-Made in Finland, with love.
+    # Use a loop to print the tools in a nice format
+    tools = {
+        "Ig Scrape": "Scrapes information from Instagram accounts.",
+        "Web Search": "Searches the internet for a given query.",
+        "Phone Lookup": "Looks up a phone number and returns information about it.",
+        "Ip Lookup": "Looks up an IP/domain address and returns information about it.",
+        "Port Scanner": "Scans for open ports in a given IP/domain address.",
+        "Username Search": "Tries to find a given username from many different websites.",
+        "Leak Search": "Searches if a given email/domain has been compromised and leaked.",
+        "Email Search": "Efficiently finds registered accounts from a given email.",
+        "WhoIs Lookup": "Looks up a domain and returns information about it.",
+        "SMS Bomber": "Spams messages to a given mobile number (works poorly and only for US numbers).",
+        "Fake Info Generator": "Generates fake information using Faker.",
+        "Web Scrape": "Scrapes links from a given URL.",
+        "Wi-Fi Finder": "Scans for nearby Wi-Fi networks.",
+        "Wi-Fi Vault": "Scans for locally saved Wi-Fi passwords.",
+        "Dir Buster": "Bruteforce directories on a website.",
+        "Local Users": "Enumerates local user accounts on the current machine.",
+        "Caesar Cipher": "Cipher/decipher/bruteforce a message using the Caesar's code.",
+        "BaseXX": "Encodes/decodes a message using Base64/32/16.",
+        "Help": "Shows this help menu."
+    }
 
+    for tool, description in tools.items():
+        print("* {} - {}".format(tool, description))
 
-Name          Desc
----------     ----------
-Ig Scrape : Scrapes information from IG accounts.
-Web Search : Searches the internet for the given query.
-Phone Lookup : Looks up a phone number and returns information about it.
-Ip Lookup : Looks up an IP/domain address and returns information about it.
-Port Scanner : Scans for open ports in a given IP/domain address.
-Username Search : Tries to find a given username from many different websites.
-Cybercrime int : Searches if given email/domain has been compromised and leaked.
-Email Search : Efficiently finds registered accounts from a given email.
-Webhook Spammer : Spams messages to a discord webhook.
-WhoIs Lookup : Looks up a domain and returns information about it.
-SMS Bomber : Spams messages to a given mobile number. (Works poorly and only for US numbers)
-Fake Info Generator : Generates fake information using Faker.
-Web Scrape : Scrapes links from a given url.
-Wi-Fi Finder : Scans for nearby Wi-Fi networks.
-Wi-Fi Vault : Scans for locally saved Wi-Fi passwords.
-Dir Buster : Bruteforce directories on a website.
-Local User Enum : Enumerates local user accounts on the current machine.
-Caesar Cipher : Cipher/decipher/bruteforce a message using the Caesar's code.
-BaseXX : Encodes/decodes a message using Base64/32/16.
-Help : Shows the help message.
-Donate : My crypto addresses where to donate.
+    print("\nClosing the Toolkit:")
+    print("----------------------")
+    print("You can close the toolkit using the following commands:")
+    print("* quit")
+    print("* q")
+    print("* kill")
+    print("* exit")
 
-You can close the toolkit with the commands quit, q, kill and exit.
+    print("\nLicense and Credits:")
+    print("---------------------")
+    print("H4X-Tools is under the GNU General Public License, version 3, and is made by Vili.")
 
-This toolkit is under the GNU General Public License, version 3, and is made by Vili.
-    """)
-
-
-def donate() -> None:
-    printer.nonprefix(f"""{Fore.LIGHTCYAN_EX}
-If you want to support me and keep H4X-Tools alive, you can donate to these addresses:
-
-Platform  Address
-------    ------        
-BCH :    qp58pmwsfq4rp0vvafjrj2uenp8edmftycvvh8wmlg
-BTC :    bc1qwgeuvc25g4hrylmgcup4yzavt5tl8pk93auj34
-ETH :    0x4433D6d7d31F38c63E0e6eA31Ffac2125B618142
-XMR :    47RTtA7b8dgQmd9dDYYTUrhsrXzdUvckLGqvZoBCwrchRdky1fLmzexL3esTNrTMstJiafnhDacsXi8UnS1AXACNKkNzv71
-Or you can support me on GitHub : https://github.com/sponsors/vil
-  
-Every single donation is appreciated! <3
-    """)
 
 def print_menu() -> None:
     max_option_length = max(len(value.__name__.replace('handle_', '').replace('_', ' ').title()) for value in MENU_OPTIONS.values())
@@ -108,6 +101,7 @@ def print_menu() -> None:
             print(" " * 4, end='')
 
     print("\n")
+    print(f"Type {Style.BRIGHT}?{Style.RESET_ALL} for help.")
     print(f"Type {Style.BRIGHT}exit{Style.RESET_ALL} to close the toolkit...")
 
 MENU_OPTIONS = {
@@ -117,21 +111,18 @@ MENU_OPTIONS = {
     "4": handles.handle_ip_lookup,
     "5": handles.handle_username_search,
     "6": handles.handle_email_search,
-    "7": handles.handle_cybercrime_int,
+    "7": handles.handle_leak_search,
     "8": handles.handle_port_scanner,
-    "9": handles.handle_webhook_spammer,
-    "10": handles.handle_whois_lookup,
-    "11": handles.handle_sms_bomber,
-    "12": handles.handle_fake_info_generator,
-    "13": handles.handle_web_scrape,
-    "14": handles.handle_wifi_finder,
-    "15": handles.handle_wifi_vault,
-    "16": handles.handle_dir_buster,
-    "17": handles.handle_local_user_enum,
-    "18": handles.handle_caesar_cipher,
-    "19": handles.handle_basexx,
-    "20": help,
-    "21": donate
+    "9": handles.handle_whois_lookup,
+    "10": handles.handle_sms_bomber,
+    "11": handles.handle_fake_info_generator,
+    "12": handles.handle_web_scrape,
+    "13": handles.handle_wifi_finder,
+    "14": handles.handle_wifi_vault,
+    "15": handles.handle_dir_buster,
+    "16": handles.handle_local_users,
+    "17": handles.handle_caesar_cipher,
+    "18": handles.handle_basexx
 }
 
 def main() -> None:
@@ -144,7 +135,6 @@ def main() -> None:
 
     while True:
         print_banner()
-        time.sleep(1)
         print_menu()
         user_input = printer.inp(f"Tool to execute : \t")
 
@@ -157,12 +147,16 @@ def main() -> None:
             time.sleep(0.5)
             break
 
+
         if user_input in MENU_OPTIONS:
             try:
                 MENU_OPTIONS[user_input]()  # Call the corresponding function based on the selected option
             except KeyboardInterrupt:
                 printer.warning("Cancelled..!")
             time.sleep(3)  # Sleep so the user has time to see results.
+        elif user_input.lower() == "?":
+            help()
+            time.sleep(3)
         else:
             printer.error("Invalid option!")
             time.sleep(0.5)

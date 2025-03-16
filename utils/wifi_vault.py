@@ -1,5 +1,5 @@
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import os, subprocess, re, time
 from helper import printer, timer
@@ -27,7 +27,6 @@ class Scan:
     def __init__(self) -> None:
         if os.name == "nt":
             printer.info("Windows system detected..!\n")
-            time.sleep(1)
             try:
                 output = subprocess.check_output("netsh wlan show profiles", shell=True).decode("utf-8")
                 profile_names = [line.split(":")[1].strip() for line in output.splitlines() if
@@ -55,7 +54,6 @@ class Scan:
 
         else:
             printer.info("Linux system detected..!\n")
-            time.sleep(1)
             try:
                 output = subprocess.check_output(['nmcli', '-f', 'NAME,UUID', 'connection', 'show'])
                 connections = re.findall(r'(\S+)\s+([0-9a-f-]{36})', output.decode())
