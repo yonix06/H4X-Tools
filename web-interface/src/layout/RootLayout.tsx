@@ -12,68 +12,102 @@ const RootLayout: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-dark-gray-900">
+    <View className="min-h-screen bg-dark-gray-900">
       {/* Header */}
-      <div className="bg-dark-gray-800 p-4">
-        <div className="max-w-7xl mx-auto flex flex-row justify-between items-center">
+      <View className="bg-dark-gray-800 p-4">
+        <View className="max-w-7xl mx-auto flex flex-row justify-between items-center">
           {/* Logo */}
-          <div className="flex flex-row items-center">
-            <span className="text-2xl font-bold text-hacker-green mr-2">
+          <View className="flex flex-row items-center">
+            <Text className="text-2xl font-bold text-hacker-green mr-2">
               H4X-Tools
-            </span>
-            <span className="text-gray-400">
-              Web Interface
-            </span>
-          </div>
+            </Text>
+            <Text className="text-gray-400">Web Interface</Text>
+          </View>
 
-          <div className="flex flex-row items-center gap-4">
+          {/* Navigation and Theme Toggle */}
+          <View className="flex flex-row items-center gap-4">
             {/* Navigation Menu */}
-            <div className="flex flex-row gap-2">
-              <button
+            <View className="flex flex-row gap-2">
+              <TouchableOpacity
                 className={`px-3 py-2 rounded-md ${
-                  isActive('/') 
+                  isActive('/')
                     ? 'bg-hacker-green text-white'
                     : 'bg-dark-gray-700 text-gray-300 hover:text-white'
                 }`}
-                onClick={() => navigate('/')}
+                onPress={() => navigate('/')}
               >
-                Home
-              </button>
+                <Text className="text-inherit">Home</Text>
+              </TouchableOpacity>
 
-              <button
+              <TouchableOpacity
                 className={`px-3 py-2 rounded-md ${
                   isActive('/tools')
                     ? 'bg-hacker-green text-white'
                     : 'bg-dark-gray-700 text-gray-300 hover:text-white'
                 }`}
-                onClick={() => navigate('/tools')}
+                onPress={() => navigate('/tools')}
               >
-                Tools
-              </button>
-            </div>
+                <Text className="text-inherit">Tools</Text>
+              </TouchableOpacity>
 
-            <button
-              onClick={toggleTheme}
+              <TouchableOpacity
+                className={`px-3 py-2 rounded-md ${
+                  isActive('/investigation')
+                    ? 'bg-hacker-green text-white'
+                    : 'bg-dark-gray-700 text-gray-300 hover:text-white'
+                }`}
+                onPress={() => navigate('/investigation')}
+              >
+                <Text className="text-inherit">Investigation</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className={`px-3 py-2 rounded-md ${
+                  isActive('/security')
+                    ? 'bg-hacker-green text-white'
+                    : 'bg-dark-gray-700 text-gray-300 hover:text-white'
+                }`}
+                onPress={() => navigate('/security')}
+              >
+                <Text className="text-inherit">Security</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Theme Toggle */}
+            <TouchableOpacity
+              onPress={toggleTheme}
               className="px-3 py-2 rounded-md bg-dark-gray-700 text-gray-300 hover:text-white"
             >
-              Toggle Theme
-            </button>
+              <Text className="text-inherit">{isDark ? '☀️' : '🌙'}</Text>
+            </TouchableOpacity>
 
-            <span className="text-gray-400">v1.0.0</span>
-          </div>
-        </div>
-      </div>
+            {/* Version */}
+            <Text className="text-gray-400">v1.0.0</Text>
+          </View>
+        </View>
+      </View>
 
       {/* Main Content Area */}
-      <Outlet />
+      <View className="flex-1">
+        <Outlet />
+      </View>
 
       {/* Footer */}
-      <div className="bg-dark-gray-800 p-4 mt-auto">
-        <span className="text-gray-400 text-center">
-          H4X-Tools Web Interface - Based on the original H4X-Tools by vil - FOR EDUCATIONAL PURPOSES ONLY
-        </span>
-      </div>
-    </div>
+      <View
+        className={`px-6 py-4 mt-auto ${
+          isDark
+            ? 'bg-dark-gray-800 border-t border-dark-gray-700'
+            : 'bg-white border-t border-gray-200'
+        }`}
+      >
+        <View className="max-w-7xl mx-auto text-center">
+          <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            H4X-Tools Web Interface - Based on the original H4X-Tools by vil -
+            FOR EDUCATIONAL PURPOSES ONLY
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 };
 

@@ -27,6 +27,7 @@ module.exports = function override(config, env) {
               ...rule.use[postCSSIndex].options?.postcssOptions,
               plugins: [
                 require('tailwindcss'),
+                require('autoprefixer'),
                 require('postcss-flexbugs-fixes'),
                 require('postcss-preset-env')({
                   autoprefixer: {

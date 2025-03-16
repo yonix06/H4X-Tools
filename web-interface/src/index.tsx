@@ -1,23 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './styles/index.css';
+import { createRoot } from 'react-dom/client';
 import App from './pages/App';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { HistoryProvider } from './contexts/HistoryContext';
-import reportWebVitals from './reportWebVitals';
+import './styles/index.css';
+import './styles/App.css';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const container = document.getElementById('root');
+if (!container) throw new Error('Failed to find the root element');
+const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
     <ThemeProvider>
-      <HistoryProvider>
-        <App />
-      </HistoryProvider>
+      <App />
     </ThemeProvider>
   </React.StrictMode>
 );
-
-reportWebVitals();

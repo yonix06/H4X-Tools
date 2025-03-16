@@ -38,7 +38,7 @@ interface ToolsListProps {
   onSelectTool?: (tool: Tool) => void;
 }
 
-const ToolsList: React.FC<ToolsListProps> = ({ onSelectTool }) => {
+const ToolsList: React.FC<ToolsListProps> = ({ onSelectTool = () => console.log('Tool selected but no handler provided') }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,7 +143,7 @@ const ToolsList: React.FC<ToolsListProps> = ({ onSelectTool }) => {
             <ToolCard
               key={tool.id}
               tool={tool}
-              onSelect={onSelectTool || (() => {})}
+              onSelect={onSelectTool}
             />
           ))
         )}

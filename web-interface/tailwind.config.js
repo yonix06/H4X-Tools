@@ -71,12 +71,14 @@ module.exports = {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        pulse: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: .5 },
+        },
       },
-      maxWidth: {
-        '8xl': '88rem',
-      },
-      maxHeight: {
-        '400': '400px',
+      scale: {
+        '102': '1.02',
+        '105': '1.05',
       },
     },
   },
@@ -84,6 +86,7 @@ module.exports = {
     require('@tailwindcss/forms')({
       strategy: 'class',
     }),
+    require('@tailwindcss/typography'),
   ],
   important: true,
 }
