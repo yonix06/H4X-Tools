@@ -156,7 +156,7 @@ const Tools: React.FC = () => {
 
       {/* Main Content */}
       <ScrollView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f9fafb' }}>
-        <View style={{ padding: 16, maxWidth: 1200, marginHorizontal: 'auto', width: '100%' }}></View>
+        <View style={{ padding: 16, maxWidth: 1200, marginHorizontal: 'auto', width: '100%' }}>
           <View style={{ flexDirection: 'row', gap: 16 }}>
             {/* Tool List */}
             <View style={{ flex: 1 }}>
@@ -211,7 +211,7 @@ const Tools: React.FC = () => {
                       <Text style={{
                         color: isDark ? '#10b981' : '#059669',
                         fontSize: 12,
-                      }}></Text>
+                      }}>
                         {CATEGORIES[tool.category].name}
                       </Text>
                     </View>
@@ -250,7 +250,7 @@ const Tools: React.FC = () => {
                   borderRadius: 8,
                   padding: 16,
                   marginBottom: 16,
-                }}></View>
+                }}>
                   {selectedTool.inputs.map(input => (
                     <View key={input.name} style={{ marginBottom: 12 }}>
                       <Text style={{
@@ -291,7 +291,7 @@ const Tools: React.FC = () => {
                       color: '#ffffff',
                       textAlign: 'center',
                       fontWeight: 'bold',
-                    }}></Text>
+                    }}>
                       {isLoading ? 'Running...' : 'Run Tool'}
                     </Text>
                   </TouchableOpacity>
@@ -300,7 +300,7 @@ const Tools: React.FC = () => {
                     <Text style={{
                       color: isDark ? '#ef4444' : '#dc2626',
                       marginTop: 8,
-                    }}></Text>
+                    }}>
                       {error}
                     </Text>
                   )}

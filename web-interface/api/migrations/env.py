@@ -5,27 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 
-import os
-import sys
-from dotenv import load_dotenv
-
-# Add the parent directory to Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Load environment variables
-load_dotenv()
-
-# Import the SQLAlchemy models
-from models.database import db
-from models.models import ToolResult, Investigation, InvestigationNote, SecurityEvent
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-# Update the SQLAlchemy URL from environment variables if available
-db_url = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/h4xtools')
-config.set_main_option('sqlalchemy.url', db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -34,7 +16,9 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-target_metadata = db.metadata
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

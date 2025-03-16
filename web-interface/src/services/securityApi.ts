@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export interface ApiResponse<T = any> {
   status: 'success' | 'error';
@@ -10,26 +10,26 @@ export interface ApiResponse<T = any> {
 }
 
 export const securityApi = {
-  // Security monitoring endpoints
   async getFail2banStatus(): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/security/fail2ban`);
+    const response = await axios.get(`${API_BASE_URL}/security/fail2ban`);
     return response.data;
   },
 
   async getVPNStatus(): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/security/vpn`);
+    const response = await axios.get(`${API_BASE_URL}/security/vpn`);
     return response.data;
   },
 
   async getBannedIPs(jail?: string): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/security/banned-ips`, {
-      params: { jail }
-    });
+    const url = jail 
+      ? `${API_BASE_URL}/security/banned-ips?jail=${jail}`
+      : `${API_BASE_URL}/security/banned-ips`;
+    const response = await axios.get(url);
     return response.data;
   },
 
   async unbanIP(ip: string, jail?: string): Promise<ApiResponse> {
-    const response = await axios.post(`${BASE_URL}/security/unban-ip`, {
+    const response = await axios.post(`${API_BASE_URL}/security/unban-ip`, {
       ip,
       jail
     });
@@ -37,13 +37,12 @@ export const securityApi = {
   },
 
   async getSecurityEvents(): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/security/events`);
+    const response = await axios.get(`${API_BASE_URL}/security/events`);
     return response.data;
   },
 
-  // Investigation management
-  async listInvestigations(): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/investigations`);
+  async executeTool(toolId: string, params: Record<string, any>): Promise<ApiResponse> {
+    const response = await axios.post(`${API_BASE_URL}/tools/${toolId}`, params);
     return response.data;
   },
 
@@ -52,12 +51,17 @@ export const securityApi = {
     description?: string;
     severity?: 'low' | 'medium' | 'high' | 'critical';
   }): Promise<ApiResponse> {
-    const response = await axios.post(`${BASE_URL}/investigations`, data);
+    const response = await axios.post(`${API_BASE_URL}/investigations`, data);
+    return response.data;
+  },
+
+  async listInvestigations(): Promise<ApiResponse> {
+    const response = await axios.get(`${API_BASE_URL}/investigations`);
     return response.data;
   },
 
   async getInvestigation(id: number): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/investigations/${id}`);
+    const response = await axios.get(`${API_BASE_URL}/investigations/${id}`);
     return response.data;
   },
 
@@ -67,34 +71,32 @@ export const securityApi = {
     status?: 'active' | 'archived' | 'closed';
     severity?: 'low' | 'medium' | 'high' | 'critical';
   }): Promise<ApiResponse> {
-    const response = await axios.put(`${BASE_URL}/investigations/${id}`, data);
+    const response = await axios.put(`${API_BASE_URL}/investigations/${id}`, data);
     return response.data;
   },
 
   async deleteInvestigation(id: number): Promise<ApiResponse> {
-    const response = await axios.delete(`${BASE_URL}/investigations/${id}`);
+    const response = await axios.delete(`${API_BASE_URL}/investigations/${id}`);
     return response.data;
   },
 
   async getInvestigationNotes(id: number): Promise<ApiResponse> {
-    const response = await axios.get(`${BASE_URL}/investigations/${id}/notes`);
+    const response = await axios.get(`${API_BASE_URL}/investigations/${id}/notes`);
     return response.data;
   },
 
   async addInvestigationNote(id: number, content: string): Promise<ApiResponse> {
-    const response = await axios.post(`${BASE_URL}/investigations/${id}/notes`, {
+    const response = await axios.post(`${API_BASE_URL}/investigations/${id}/notes`, {
       content
     });
     return response.data;
   },
 
-  // Tool execution
-  async executeTool(toolId: string, params: Record<string, any>): Promise<ApiResponse> {
-    const response = await axios.post(`${BASE_URL}/tools/${toolId}`, params);
+  async getInvestigationTools(investigationId: number): Promise<ApiResponse> {
+    const response = await axios.get(`${API_BASE_URL}/investigations/${investigationId}/tools`);
     return response.data;
   },
 
-  // Error handling wrapper
   async executeRequest<T>(request: () => Promise<T>): Promise<ApiResponse<T>> {
     try {
       const result = await request();
