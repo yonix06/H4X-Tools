@@ -6,7 +6,13 @@ import subprocess
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 import importlib.util
+from models.database import init_db, db
+from models.models import ToolResult, Investigation, InvestigationNote, SecurityEvent
+
+# Load environment variables
+load_dotenv()
 
 # Add the parent directory to Python path to find the utils module
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -52,11 +58,22 @@ tools = {
 app = Flask(__name__)
 CORS(app)
 
+# Initialize database
+init_db(app)
+
 def get_fail2ban_status():
     try:
-        # Use subprocess to run fail2ban-client status
         result = subprocess.run(['fail2ban-client', 'status'], capture_output=True, text=True)
         if result.returncode == 0:
+            # Parse and store the event in database
+            event = SecurityEvent(
+                event_type='fail2ban',
+                details={'status': result.stdout},
+                severity='medium'
+            )
+            db.session.add(event)
+            db.session.commit()
+            
             return {
                 "status": "success",
                 "data": result.stdout,
@@ -76,16 +93,25 @@ def get_fail2ban_status():
 
 def get_vpn_status():
     try:
-        # Check OpenVPN status - adjust command based on your VPN service
         result = subprocess.run(['systemctl', 'status', 'openvpn'], capture_output=True, text=True)
         is_active = 'active (running)' in result.stdout
         
-        # Get active connections if VPN is running
         connections = []
         if is_active:
-            # This command needs to be adjusted based on your VPN setup
             conn_result = subprocess.run(['who'], capture_output=True, text=True)
             connections = conn_result.stdout.splitlines()
+
+        # Store VPN status in database
+        event = SecurityEvent(
+            event_type='vpn',
+            details={
+                'is_active': is_active,
+                'connections': connections
+            },
+            severity='low' if is_active else 'high'
+        )
+        db.session.add(event)
+        db.session.commit()
 
         return {
             "status": "success",
@@ -105,22 +131,17 @@ def get_vpn_status():
 
 @app.route('/')
 def index():
-    # Return list of available tools and their status
     return jsonify({
         "status": "success",
         "message": "H4X-Tools API is running",
         "version": "1.0.0",
-        "available_tools": available_tools,
-        "endpoints": [
-            "/api/tools/<tool_id>",
-            "/api/security/fail2ban",
-            "/api/security/vpn"
-        ]
+        "available_tools": available_tools
     })
 
 @app.route('/api/tools/<tool_id>', methods=['POST'])
 def execute_tool(tool_id):
     params = request.json
+    investigation_id = params.pop('investigation_id', None)
     
     if not available_tools.get(tool_id, False):
         return jsonify({
@@ -138,8 +159,8 @@ def execute_tool(tool_id):
                 "timestamp": datetime.now().isoformat()
             }), 404
 
+        # Execute tool
         result = None
-        
         if tool_id == 'ig_scrape':
             result = tool_module.Scrape(params.get('username', '')).get_data()
         elif tool_id == 'web_search':
@@ -199,6 +220,17 @@ def execute_tool(tool_id):
                 params.get('mode', 'encode'),
                 params.get('base', '64')
             )
+
+        # Store result in database
+        tool_result = ToolResult(
+            tool_id=tool_id,
+            input_data=params,
+            result_data=result,
+            status='success',
+            investigation_id=investigation_id
+        )
+        db.session.add(tool_result)
+        db.session.commit()
         
         return jsonify({
             "status": "success",
@@ -207,12 +239,104 @@ def execute_tool(tool_id):
         })
     
     except Exception as e:
-        print(f"Error executing {tool_id}: {str(e)}")
+        error_result = ToolResult(
+            tool_id=tool_id,
+            input_data=params,
+            result_data={"error": str(e)},
+            status='error',
+            investigation_id=investigation_id
+        )
+        db.session.add(error_result)
+        db.session.commit()
+        
         return jsonify({
             "status": "error",
             "message": str(e),
             "timestamp": datetime.now().isoformat()
         }), 500
+
+@app.route('/api/investigations', methods=['GET', 'POST'])
+def investigations():
+    if request.method == 'GET':
+        investigations = Investigation.query.all()
+        return jsonify({
+            "status": "success",
+            "data": [inv.to_dict() for inv in investigations],
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    elif request.method == 'POST':
+        data = request.json
+        investigation = Investigation(
+            title=data['title'],
+            description=data.get('description', ''),
+            severity=data.get('severity', 'medium')
+        )
+        db.session.add(investigation)
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "data": investigation.to_dict(),
+            "timestamp": datetime.now().isoformat()
+        })
+
+@app.route('/api/investigations/<int:investigation_id>', methods=['GET', 'PUT', 'DELETE'])
+def investigation(investigation_id):
+    investigation = Investigation.query.get_or_404(investigation_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            "status": "success",
+            "data": investigation.to_dict(),
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    elif request.method == 'PUT':
+        data = request.json
+        investigation.title = data.get('title', investigation.title)
+        investigation.description = data.get('description', investigation.description)
+        investigation.status = data.get('status', investigation.status)
+        investigation.severity = data.get('severity', investigation.severity)
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "data": investigation.to_dict(),
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    elif request.method == 'DELETE':
+        db.session.delete(investigation)
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "message": "Investigation deleted",
+            "timestamp": datetime.now().isoformat()
+        })
+
+@app.route('/api/investigations/<int:investigation_id>/notes', methods=['GET', 'POST'])
+def investigation_notes(investigation_id):
+    investigation = Investigation.query.get_or_404(investigation_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            "status": "success",
+            "data": [note.to_dict() for note in investigation.notes],
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    elif request.method == 'POST':
+        data = request.json
+        note = InvestigationNote(
+            investigation_id=investigation_id,
+            content=data['content']
+        )
+        db.session.add(note)
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "data": note.to_dict(),
+            "timestamp": datetime.now().isoformat()
+        })
 
 @app.route('/api/security/fail2ban')
 def fail2ban_status():
@@ -221,6 +345,15 @@ def fail2ban_status():
 @app.route('/api/security/vpn')
 def vpn_status():
     return jsonify(get_vpn_status())
+
+@app.route('/api/security/events', methods=['GET'])
+def security_events():
+    events = SecurityEvent.query.order_by(SecurityEvent.timestamp.desc()).limit(100).all()
+    return jsonify({
+        "status": "success",
+        "data": [event.to_dict() for event in events],
+        "timestamp": datetime.now().isoformat()
+    })
 
 if __name__ == '__main__':
     print(f"Starting Flask server...")

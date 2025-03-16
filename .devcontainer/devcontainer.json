@@ -15,7 +15,8 @@
 		"ghcr.io/schlich/devcontainer-features/powerlevel10k:1": {},
 		"ghcr.io/devcontainers-extra/features/gitsign-credential-cache:1": {},
 		"ghcr.io/devcontainers-extra/features/vscode-cli:1": {},
-		"ghcr.io/devcontainers-extra/features/vscode-server:1": {}
+		"ghcr.io/devcontainers-extra/features/vscode-server:1": {},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
 	},
 	"customizations": {
 		"vscode": {
