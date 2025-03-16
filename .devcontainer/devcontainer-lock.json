@@ -1,0 +1,59 @@
+{
+  "features": {
+    "ghcr.io/devcontainers-extra/features/gitsign-credential-cache:1": {
+      "version": "1.0.9",
+      "resolved": "ghcr.io/devcontainers-extra/features/gitsign-credential-cache@sha256:f2f569b67b5b579414985f395fb64c38b8b9b48d3f45b0ae6d9e1df502e1b248",
+      "integrity": "sha256:f2f569b67b5b579414985f395fb64c38b8b9b48d3f45b0ae6d9e1df502e1b248"
+    },
+    "ghcr.io/devcontainers-extra/features/vscode-cli:1": {
+      "version": "1.0.1",
+      "resolved": "ghcr.io/devcontainers-extra/features/vscode-cli@sha256:da4b65c77f050da198385c3ff43965a2c4e2813892d15eb748d18cb8642cd847",
+      "integrity": "sha256:da4b65c77f050da198385c3ff43965a2c4e2813892d15eb748d18cb8642cd847"
+    },
+    "ghcr.io/devcontainers-extra/features/vscode-server:1": {
+      "version": "1.0.1",
+      "resolved": "ghcr.io/devcontainers-extra/features/vscode-server@sha256:d9e56d7b038cac9b2ccf6aa613a3f0f0a27055a2ec85330ed719a6907f009937",
+      "integrity": "sha256:d9e56d7b038cac9b2ccf6aa613a3f0f0a27055a2ec85330ed719a6907f009937"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "version": "2.5.2",
+      "resolved": "ghcr.io/devcontainers/features/common-utils@sha256:5b1c376d30719a4dead8fb2f272ee496cfb506f2f92b7acf9e1c24cb5399ba7d",
+      "integrity": "sha256:5b1c376d30719a4dead8fb2f272ee496cfb506f2f92b7acf9e1c24cb5399ba7d"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "1.0.13",
+      "resolved": "ghcr.io/devcontainers/features/github-cli@sha256:13b301a039ce9e0bb07d45ea0c106c946cfff01c3b9844bbec6b0c7bacba8de3",
+      "integrity": "sha256:13b301a039ce9e0bb07d45ea0c106c946cfff01c3b9844bbec6b0c7bacba8de3"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "1.6.1",
+      "resolved": "ghcr.io/devcontainers/features/node@sha256:71590121aaf7b2040f3e1e2dfc4bb9a1389277fd5a88a7199094542b82ce5340",
+      "integrity": "sha256:71590121aaf7b2040f3e1e2dfc4bb9a1389277fd5a88a7199094542b82ce5340"
+    },
+    "ghcr.io/devcontainers/features/nvidia-cuda:1": {
+      "version": "1.2.0",
+      "resolved": "ghcr.io/devcontainers/features/nvidia-cuda@sha256:c070be87fe721e9b477c9e665576336400e90a1238a530e31c294a532b0a2b9d",
+      "integrity": "sha256:c070be87fe721e9b477c9e665576336400e90a1238a530e31c294a532b0a2b9d"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "1.7.0",
+      "resolved": "ghcr.io/devcontainers/features/python@sha256:8452f39db0852420728c9f7503dd94b3fc71aa558b5e7c8f6f9ce6687e494ae3",
+      "integrity": "sha256:8452f39db0852420728c9f7503dd94b3fc71aa558b5e7c8f6f9ce6687e494ae3"
+    },
+    "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store@sha256:32f78bc711aecc2b1479143a4412461b4075c61f0d4776e74265890099a3c7f6",
+      "integrity": "sha256:32f78bc711aecc2b1479143a4412461b4075c61f0d4776e74265890099a3c7f6"
+    },
+    "ghcr.io/marcozac/devcontainer-features/shellcheck:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/marcozac/devcontainer-features/shellcheck@sha256:1a18cd0170c5c8a42e58a224e75b50a0e0ed5e0290c1a64aa55562256d836401",
+      "integrity": "sha256:1a18cd0170c5c8a42e58a224e75b50a0e0ed5e0290c1a64aa55562256d836401"
+    },
+    "ghcr.io/schlich/devcontainer-features/powerlevel10k:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/schlich/devcontainer-features/powerlevel10k@sha256:180ed79c78dc4c6b857f2ebaaf2e511601d7ae754cc51ec053561f4b82cec1a9",
+      "integrity": "sha256:180ed79c78dc4c6b857f2ebaaf2e511601d7ae754cc51ec053561f4b82cec1a9"
+    }
+  }
+}
