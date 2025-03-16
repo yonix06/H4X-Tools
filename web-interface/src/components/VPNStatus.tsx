@@ -4,8 +4,9 @@ import { useTheme } from '../contexts/ThemeContext';
 
 interface VPNStatusData {
   is_active: boolean;
-  connections: string[];
-  last_check: string;
+  current_ip: string;
+  location: string;
+  ping: number;
 }
 
 export const VPNStatus: React.FC = () => {
@@ -35,78 +36,36 @@ export const VPNStatus: React.FC = () => {
   }, []);
 
   return (
-    <View style={{
-      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-      padding: 16,
-      borderRadius: 6,
-      marginBottom: 24
-    }}>
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16
-      }}>
-        <Text style={{
-          fontSize: 18,
-          fontWeight: 'bold',
-          color: isDark ? '#10b981' : '#059669'
-        }}>
+    <View className="bg-dark-gray-800 p-4 rounded-md mb-6">
+      <View className="flex flex-row items-center mb-4">
+        <Text className="text-lg font-bold text-hacker-green">
           VPN Status
         </Text>
-        <View style={{
-          marginLeft: 12,
-          width: 12,
-          height: 12,
-          borderRadius: 6,
-          backgroundColor: status?.is_active 
-            ? (isDark ? '#34d399' : '#059669')
-            : (isDark ? '#ef4444' : '#dc2626')
-        }} />
+        <View className={`ml-3 w-3 h-3 rounded-full ${
+          status?.is_active 
+            ? 'bg-hacker-green'
+            : 'bg-red-500'
+        }`} />
       </View>
 
       {isLoading ? (
-        <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
+        <Text className="text-gray-400">
           Loading VPN status...
         </Text>
       ) : status ? (
-        <>
-          <Text style={{ 
-            color: isDark ? '#d1d5db' : '#4b5563',
-            marginBottom: 8 
-          }}>
-            Status: {status.is_active ? 'Active' : 'Inactive'}
+        <View className="space-y-2">
+          <Text className="text-gray-300">
+            IP: {status.current_ip}
           </Text>
-          
-          {status.connections.length > 0 && (
-            <View style={{ marginTop: 8 }}>
-              <Text style={{ 
-                color: isDark ? '#d1d5db' : '#4b5563',
-                marginBottom: 4
-              }}>
-                Active Connections:
-              </Text>
-              {status.connections.map((conn, index) => (
-                <Text key={index} style={{
-                  color: isDark ? '#9ca3af' : '#6b7280',
-                  fontFamily: 'monospace',
-                  fontSize: 14
-                }}>
-                  {conn}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          <Text style={{ 
-            color: isDark ? '#9ca3af' : '#6b7280',
-            fontSize: 12,
-            marginTop: 8
-          }}>
-            Last checked: {new Date(status.last_check).toLocaleString()}
+          <Text className="text-gray-300">
+            Location: {status.location}
           </Text>
-        </>
+          <Text className="text-gray-300">
+            Ping: {status.ping}ms
+          </Text>
+        </View>
       ) : (
-        <Text style={{ color: isDark ? '#ef4444' : '#dc2626' }}>
+        <Text className="text-gray-400">
           Failed to load VPN status
         </Text>
       )}

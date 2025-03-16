@@ -28,7 +28,6 @@ export const SecurityEvents: React.FC = () => {
     };
 
     fetchEvents();
-    // Poll events every 30 seconds
     const interval = setInterval(fetchEvents, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -48,46 +47,38 @@ export const SecurityEvents: React.FC = () => {
     }
   };
 
-  const getSeverityColor = (severity: SecurityEvent['severity']) => {
+  const getSeverityClass = (severity: SecurityEvent['severity']) => {
     switch (severity) {
       case 'critical':
-        return isDark ? '#ef4444' : '#dc2626';
+        return 'bg-red-500';
       case 'high':
-        return isDark ? '#f97316' : '#ea580c';
+        return 'bg-orange-500';
       case 'medium':
-        return isDark ? '#f59e0b' : '#d97706';
+        return 'bg-yellow-500';
       case 'low':
-        return isDark ? '#10b981' : '#059669';
+        return 'bg-blue-500';
       default:
-        return isDark ? '#6b7280' : '#9ca3af';
+        return 'bg-gray-500';
     }
   };
 
-  const getStatusColor = (status: SecurityEvent['status']) => {
+  const getStatusClass = (status: SecurityEvent['status']) => {
     switch (status) {
       case 'new':
-        return isDark ? '#ef4444' : '#dc2626';
+        return 'bg-red-500';
       case 'investigating':
-        return isDark ? '#f59e0b' : '#d97706';
+        return 'bg-yellow-500';
       case 'resolved':
-        return isDark ? '#10b981' : '#059669';
+        return 'bg-green-500';
       default:
-        return isDark ? '#6b7280' : '#9ca3af';
+        return 'bg-gray-500';
     }
   };
 
   if (error) {
     return (
-      <View style={{
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16,
-        borderRadius: 6,
-        marginBottom: 24
-      }}>
-        <Text style={{
-          color: isDark ? '#ef4444' : '#dc2626',
-          textAlign: 'center'
-        }}>
+      <View className="bg-dark-gray-800 rounded-lg p-4 mb-6">
+        <Text className="text-red-500 text-center">
           {error}
         </Text>
       </View>
@@ -95,70 +86,30 @@ export const SecurityEvents: React.FC = () => {
   }
 
   return (
-    <View style={{
-      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-      padding: 16,
-      borderRadius: 6,
-      marginBottom: 24,
-      opacity: isLoading ? 0.7 : 1
-    }}>
-      <Text style={{
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: isDark ? '#10b981' : '#059669',
-        marginBottom: 16
-      }}>
+    <View className={`bg-dark-gray-800 rounded-lg p-4 mb-6 ${isLoading ? 'opacity-70' : ''}`}>
+      <Text className="text-lg font-bold text-hacker-green mb-4">
         Security Events {isLoading && '(Updating...)'}
       </Text>
 
-      <ScrollView style={{ maxHeight: 400 }}>
+      <ScrollView className="max-h-[400px]">
         {events.map((event) => (
           <View
             key={event.id}
-            style={{
-              backgroundColor: isDark ? '#374151' : '#e5e7eb',
-              padding: 16,
-              borderRadius: 6,
-              marginBottom: 8
-            }}
+            className="bg-dark-gray-900 rounded-lg p-4 mb-2"
           >
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 8
-            }}>
+            <View className="flex flex-row justify-between items-center mb-2">
               <View>
-                <Text style={{
-                  color: isDark ? '#ffffff' : '#111827',
-                  fontWeight: 'bold',
-                  fontSize: 16
-                }}>
+                <Text className="text-base font-bold text-gray-200">
                   {event.event_type.toUpperCase()}
                 </Text>
-                <Text style={{
-                  color: isDark ? '#9ca3af' : '#6b7280',
-                  fontSize: 12
-                }}>
+                <Text className="text-gray-400 text-xs">
                   {new Date(event.timestamp).toLocaleString()}
                 </Text>
               </View>
 
-              <View style={{
-                flexDirection: 'row',
-                gap: 8
-              }}>
-                <View style={{
-                  backgroundColor: getSeverityColor(event.severity),
-                  paddingVertical: 4,
-                  paddingHorizontal: 8,
-                  borderRadius: 12
-                }}>
-                  <Text style={{
-                    color: '#ffffff',
-                    fontSize: 12,
-                    fontWeight: 'bold'
-                  }}>
+              <View className="flex flex-row gap-2">
+                <View className={`px-2 py-1 rounded-full ${getSeverityClass(event.severity)}`}>
+                  <Text className="text-white text-xs font-bold">
                     {event.severity.toUpperCase()}
                   </Text>
                 </View>
@@ -172,18 +123,9 @@ export const SecurityEvents: React.FC = () => {
                     };
                     handleStatusChange(event.id, nextStatus[event.status]);
                   }}
-                  style={{
-                    backgroundColor: getStatusColor(event.status),
-                    paddingVertical: 4,
-                    paddingHorizontal: 8,
-                    borderRadius: 12
-                  }}
+                  className={`px-2 py-1 rounded-full ${getStatusClass(event.status)}`}
                 >
-                  <Text style={{
-                    color: '#ffffff',
-                    fontSize: 12,
-                    fontWeight: 'bold'
-                  }}>
+                  <Text className="text-white text-xs font-bold">
                     {event.status.toUpperCase()}
                   </Text>
                 </TouchableOpacity>
@@ -191,26 +133,13 @@ export const SecurityEvents: React.FC = () => {
             </View>
 
             {event.source_ip && (
-              <Text style={{
-                color: isDark ? '#d1d5db' : '#4b5563',
-                fontSize: 14,
-                marginBottom: 4
-              }}>
+              <Text className="text-gray-300 text-sm mb-1">
                 Source IP: {event.source_ip}
               </Text>
             )}
 
-            <View style={{
-              backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-              padding: 12,
-              borderRadius: 4,
-              marginTop: 8
-            }}>
-              <Text style={{
-                color: isDark ? '#d1d5db' : '#4b5563',
-                fontSize: 14,
-                fontFamily: 'monospace'
-              }}>
+            <View className="bg-dark-gray-800 rounded p-3 mt-2">
+              <Text className="text-gray-300 text-sm font-mono whitespace-pre-wrap">
                 {JSON.stringify(event.details, null, 2)}
               </Text>
             </View>
@@ -218,11 +147,7 @@ export const SecurityEvents: React.FC = () => {
         ))}
 
         {events.length === 0 && !isLoading && (
-          <Text style={{
-            color: isDark ? '#9ca3af' : '#6b7280',
-            textAlign: 'center',
-            padding: 16
-          }}>
+          <Text className="text-gray-500 text-center py-4">
             No security events found
           </Text>
         )}

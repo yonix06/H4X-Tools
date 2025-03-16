@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native-web';
-import { useTheme } from '../contexts/ThemeContext';
 import { securityApi } from '../services/securityApi';
 
 interface Event {
@@ -8,14 +7,12 @@ interface Event {
   title: string;
   description: string;
   type: string;
-  severity: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
   timestamp: string;
 }
 
 export const SecurityStats: React.FC = () => {
-  const { theme } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchSecurityEvents();
@@ -29,8 +26,19 @@ export const SecurityStats: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to fetch security events');
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const getSeverityClass = (severity: Event['severity']) => {
+    switch (severity) {
+      case 'critical':
+        return 'bg-red-900 text-red-300';
+      case 'high':
+        return 'bg-orange-900 text-orange-300';
+      case 'medium':
+        return 'bg-yellow-900 text-yellow-300';
+      default:
+        return 'bg-blue-900 text-blue-300';
     }
   };
 
@@ -42,7 +50,7 @@ export const SecurityStats: React.FC = () => {
           Security Overview
         </Text>
         <Text className="text-gray-300 text-sm">
-          Today's Events: {events.filter(e => {
+          Today&apos;s Events: {events.filter(e => {
             const today = new Date();
             const eventDate = new Date(e.timestamp);
             return today.toDateString() === eventDate.toDateString();
@@ -56,7 +64,7 @@ export const SecurityStats: React.FC = () => {
           Recent Security Events
         </Text>
         
-        <View className="max-h-400">
+        <View className="max-h-[400px]">
           {events.length > 0 ? (
             <View className="flex flex-col">
               {events.map(event => (
@@ -80,7 +88,7 @@ export const SecurityStats: React.FC = () => {
                     <Text className="text-gray-200 font-bold text-sm mb-1">
                       {event.title}
                     </Text>
-                    <Text className="text-gray-400 text-sm mb-1"></Text>
+                    <Text className="text-gray-400 text-sm mb-1">
                       {event.description}
                     </Text>
                     
@@ -91,18 +99,8 @@ export const SecurityStats: React.FC = () => {
                           {event.type}
                         </Text>
                       </View>
-                      <View className={`px-2 py-0.5 rounded-full ${
-                        event.severity === 'critical' ? 'bg-red-900' :
-                        event.severity === 'high' ? 'bg-orange-900' :
-                        event.severity === 'medium' ? 'bg-yellow-900' :
-                        'bg-blue-900'
-                      }`}>
-                        <Text className={`text-xs font-bold ${
-                          event.severity === 'critical' ? 'text-red-300' :
-                          event.severity === 'high' ? 'text-orange-300' :
-                          event.severity === 'medium' ? 'text-yellow-300' :
-                          'text-blue-300'
-                        }`}>
+                      <View className={`px-2 py-0.5 rounded-full ${getSeverityClass(event.severity)}`}>
+                        <Text className="text-xs font-bold">
                           {event.severity}
                         </Text>
                       </View>
@@ -115,8 +113,8 @@ export const SecurityStats: React.FC = () => {
               ))}
             </View>
           ) : (
-            <Text className="text-gray-500 text-center p-6">
-              No security events recorded
+            <Text className="text-gray-500 text-center mt-4">
+              Couldn&apos;t load security statistics
             </Text>
           )}
         </View>

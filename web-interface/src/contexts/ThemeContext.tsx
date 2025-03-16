@@ -11,12 +11,26 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return (savedTheme as Theme) || 'dark';
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return savedTheme || (prefersDark ? 'dark' : 'light');
   });
 
   useEffect(() => {
+    const root = document.documentElement;
     localStorage.setItem('theme', theme);
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      document.body.classList.add('bg-dark-gray-900', 'text-gray-100');
+      document.body.classList.remove('bg-gray-100', 'text-gray-900');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+      document.body.classList.add('bg-gray-100', 'text-gray-900');
+      document.body.classList.remove('bg-dark-gray-900', 'text-gray-100');
+    }
   }, [theme]);
 
   const toggleTheme = () => {

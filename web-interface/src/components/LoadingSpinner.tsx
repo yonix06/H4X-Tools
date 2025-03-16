@@ -11,42 +11,13 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = 'Runni
   const isDark = theme === 'dark';
 
   return (
-    <View style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
-    }}>
-      <View style={{
-        backgroundColor: isDark ? '#1f2937' : '#ffffff',
-        padding: 24,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-      }}>
-        <View style={{ alignItems: 'center' }}>
-          <View style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            borderWidth: 4,
-            borderColor: isDark ? '#10b981' : '#059669',
-            borderTopColor: 'transparent',
-            animation: 'spin 1s linear infinite',
-          }} />
-          <Text style={{
-            marginTop: 16,
-            color: isDark ? '#d1d5db' : '#4b5563',
-            fontSize: 16,
-          }}>
+    <View className="absolute inset-0 bg-black/70 dark:bg-white/70 flex justify-center items-center z-50">
+      <View className="bg-dark-gray-800 dark:bg-white p-6 rounded-lg shadow-lg">
+        <View className="flex items-center">
+          <View className={`w-12 h-12 rounded-full border-4 border-t-transparent ${
+            isDark ? 'border-hacker-green' : 'border-hacker-green-600'
+          } animate-spin`} />
+          <Text className="mt-4 text-base text-gray-300 dark:text-gray-600">
             {message}
           </Text>
         </View>

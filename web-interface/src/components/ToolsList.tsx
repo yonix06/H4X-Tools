@@ -1,33 +1,32 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native-web';
+import { View, Text, ScrollView, TextInput, TouchableOpacity } from 'react-native-web';
 import { CATEGORIES, TOOLS, CategoryKey, Tool } from '../config/toolCategories';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface ToolCardProps {
   tool: Tool;
   onSelect: (tool: Tool) => void;
-  isDark: boolean;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelect, isDark }) => (
+const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelect }) => (
   <TouchableOpacity
     onPress={() => onSelect(tool)}
-    style={[styles.toolCard, isDark ? styles.darkToolCard : styles.lightToolCard]}
+    className="bg-dark-gray-800 rounded-lg p-4 mb-3 border border-dark-gray-700 hover:border-hacker-green transition-colors duration-200"
   >
-    <Text style={[styles.toolTitle, isDark ? styles.darkText : styles.lightText]}>
+    <Text className="text-lg font-bold text-gray-200 mb-2">
       {tool.name}
     </Text>
-    <Text style={[styles.toolDescription, isDark ? styles.darkSecondaryText : styles.lightSecondaryText]}>
+    <Text className="text-gray-400 mb-4">
       {tool.description}
     </Text>
-    <View style={styles.tagContainer}>
-      <View style={[styles.tag, isDark ? styles.darkTag : styles.lightTag]}>
-        <Text style={[styles.tagText, isDark ? styles.darkTagText : styles.lightTagText]}>
+    <View className="flex-row gap-2">
+      <View className="bg-dark-gray-900 px-3 py-1 rounded-full">
+        <Text className="text-hacker-green text-xs">
           {CATEGORIES[tool.category].name}
         </Text>
       </View>
-      <View style={[styles.tag, isDark ? styles.darkTag : styles.lightTag]}>
-        <Text style={[styles.tagText, isDark ? styles.darkTagText : styles.lightTagText]}>
+      <View className="bg-dark-gray-900 px-3 py-1 rounded-full">
+        <Text className="text-gray-300 text-xs">
           {tool.function}
         </Text>
       </View>
@@ -35,7 +34,11 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelect, isDark }) => (
   </TouchableOpacity>
 );
 
-const ToolsList: React.FC = () => {
+interface ToolsListProps {
+  onSelectTool?: (tool: Tool) => void;
+}
+
+const ToolsList: React.FC<ToolsListProps> = ({ onSelectTool }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,55 +55,48 @@ const ToolsList: React.FC = () => {
     });
   }, [searchQuery, selectedCategory, selectedFunction]);
 
+  const getFilterButtonClass = (isActive: boolean) => `
+    mr-2 rounded-full px-3 py-1.5 
+    ${isActive 
+      ? 'bg-hacker-green text-white' 
+      : isDark 
+        ? 'bg-dark-gray-800 text-gray-300' 
+        : 'bg-gray-100 text-gray-700'
+    }
+  `.trim();
+
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       {/* Search and Filters */}
-      <View style={[styles.searchContainer, isDark ? styles.darkBg : styles.lightBg]}>
+      <View className="bg-dark-gray-900 p-4 border-b border-dark-gray-700">
         <TextInput
           placeholder="Search tools..."
-          placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+          placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          style={[styles.searchInput, isDark ? styles.darkInput : styles.lightInput]}
+          className="input-field mb-4"
         />
         
         {/* Category Filters */}
         <ScrollView 
-          horizontal={true}
+          horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
+          className="mb-3 flex-row"
         >
           <TouchableOpacity
             onPress={() => setSelectedCategory('all')}
-            style={{
-              backgroundColor: selectedCategory === 'all' ? '#10b981' : isDark ? '#1f2937' : '#f3f4f6',
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 16,
-              marginRight: 8,
-            }}
+            className={getFilterButtonClass(selectedCategory === 'all')}
           >
-            <Text style={{
-              color: selectedCategory === 'all' ? '#ffffff' : isDark ? '#d1d5db' : '#4b5563',
-            }}>
-              All
-            </Text>
+            <Text className="text-sm inherit">All</Text>
           </TouchableOpacity>
+
           {Object.entries(CATEGORIES).map(([key, category]) => (
             <TouchableOpacity
               key={key}
               onPress={() => setSelectedCategory(key as CategoryKey)}
-              style={{
-                backgroundColor: selectedCategory === key ? '#10b981' : isDark ? '#1f2937' : '#f3f4f6',
-                paddingVertical: 6,
-                paddingHorizontal: 12,
-                borderRadius: 16,
-                marginRight: 8,
-              }}
+              className={getFilterButtonClass(selectedCategory === key)}
             >
-              <Text style={{
-                color: selectedCategory === key ? '#ffffff' : isDark ? '#d1d5db' : '#4b5563',
-              }}>
+              <Text className="text-sm inherit">
                 {category.name}
               </Text>
             </TouchableOpacity>
@@ -109,40 +105,26 @@ const ToolsList: React.FC = () => {
 
         {/* Function Filters */}
         <ScrollView 
-          horizontal={true}
+          horizontal
           showsHorizontalScrollIndicator={false}
+          className="flex-row"
         >
           <TouchableOpacity
             onPress={() => setSelectedFunction('all')}
-            style={{
-              backgroundColor: selectedFunction === 'all' ? '#10b981' : isDark ? '#1f2937' : '#f3f4f6',
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 16,
-              marginRight: 8,
-            }}
+            className={getFilterButtonClass(selectedFunction === 'all')}
           >
-            <Text style={{
-              color: selectedFunction === 'all' ? '#ffffff' : isDark ? '#d1d5db' : '#4b5563',
-            }}>
+            <Text className="text-sm inherit">
               All Functions
             </Text>
           </TouchableOpacity>
+
           {['investigation', 'analysis', 'monitoring', 'utility'].map((func) => (
             <TouchableOpacity
               key={func}
               onPress={() => setSelectedFunction(func as Tool['function'])}
-              style={{
-                backgroundColor: selectedFunction === func ? '#10b981' : isDark ? '#1f2937' : '#f3f4f6',
-                paddingVertical: 6,
-                paddingHorizontal: 12,
-                borderRadius: 16,
-                marginRight: 8,
-              }}
+              className={getFilterButtonClass(selectedFunction === func)}
             >
-              <Text style={{
-                color: selectedFunction === func ? '#ffffff' : isDark ? '#d1d5db' : '#4b5563',
-              }}>
+              <Text className="text-sm inherit">
                 {func.charAt(0).toUpperCase() + func.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -151,12 +133,9 @@ const ToolsList: React.FC = () => {
       </View>
 
       {/* Tools List */}
-      <ScrollView 
-        style={[styles.toolList, isDark ? styles.darkBg : styles.lightBg]}
-        contentContainerStyle={styles.toolListContent}
-      >
+      <ScrollView className="flex-1 bg-dark-gray-900 p-4">
         {filteredTools.length === 0 ? (
-          <Text style={[styles.emptyText, isDark ? styles.darkText : styles.lightText]}>
+          <Text className="text-gray-500 text-center mt-4">
             No tools found matching your criteria
           </Text>
         ) : (
@@ -164,11 +143,7 @@ const ToolsList: React.FC = () => {
             <ToolCard
               key={tool.id}
               tool={tool}
-              onSelect={(tool) => {
-                // TODO: Implement tool selection handler
-                console.log('Selected tool:', tool.id);
-              }}
-              isDark={isDark}
+              onSelect={onSelectTool || (() => {})}
             />
           ))
         )}
@@ -176,110 +151,5 @@ const ToolsList: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  darkBg: {
-    backgroundColor: '#111827',
-    borderBottomColor: '#374151',
-  },
-  lightBg: {
-    backgroundColor: '#ffffff',
-    borderBottomColor: '#e5e7eb',
-  },
-  searchInput: {
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 16,
-    borderWidth: 1,
-  },
-  darkInput: {
-    backgroundColor: '#1f2937',
-    color: '#ffffff',
-    borderColor: '#374151',
-  },
-  lightInput: {
-    backgroundColor: '#f3f4f6',
-    color: '#000000',
-    borderColor: '#e5e7eb',
-  },
-  filterScroll: {
-    marginBottom: 12,
-  },
-  toolList: {
-    flex: 1,
-  },
-  toolListContent: {
-    padding: 16,
-  },
-  toolCard: {
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
-  darkToolCard: {
-    backgroundColor: '#1f2937',
-    borderColor: '#374151',
-  },
-  lightToolCard: {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#e5e7eb',
-  },
-  toolTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  toolDescription: {
-    marginBottom: 8,
-  },
-  darkText: {
-    color: '#e5e7eb',
-  },
-  lightText: {
-    color: '#1f2937',
-  },
-  darkSecondaryText: {
-    color: '#9ca3af',
-  },
-  lightSecondaryText: {
-    color: '#6b7280',
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tag: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-  },
-  darkTag: {
-    backgroundColor: '#374151',
-  },
-  lightTag: {
-    backgroundColor: '#e5e7eb',
-  },
-  tagText: {
-    fontSize: 12,
-  },
-  darkTagText: {
-    color: '#d1d5db',
-  },
-  lightTagText: {
-    color: '#4b5563',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 32,
-  },
-});
 
 export default ToolsList;

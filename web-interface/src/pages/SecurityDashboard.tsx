@@ -19,7 +19,7 @@ interface VPNStatus {
   last_check: string;
 }
 
-export const SecurityDashboard: React.FC = () => {
+const SecurityDashboard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [fail2banStatus, setFail2banStatus] = useState<any>(null);
@@ -182,3 +182,5 @@ export const SecurityDashboard: React.FC = () => {
     </View>
   );
 };
+
+export default SecurityDashboard;

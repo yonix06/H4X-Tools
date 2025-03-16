@@ -4,265 +4,128 @@ import { useTheme } from '../contexts/ThemeContext';
 
 interface Report {
   id: string;
-  timestamp: string;
   title: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'draft' | 'submitted';
-  evidenceLinks: string[];
+  timestamp: string;
+  status: 'open' | 'closed' | 'investigating';
+}
+
+interface NewReport {
+  title: string;
+  description: string;
 }
 
 const Reports: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [reports, setReports] = useState<Report[]>([]);
-  const [newReport, setNewReport] = useState<Partial<Report>>({
+  const [newReport, setNewReport] = useState<NewReport>({
     title: '',
-    description: '',
-    severity: 'medium',
-    evidenceLinks: []
+    description: ''
   });
 
-  const handleCreateReport = () => {
-    if (!newReport.title || !newReport.description) return;
-
+  const handleSubmit = () => {
     const report: Report = {
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
+      id: Math.random().toString(36).substr(2, 9),
       title: newReport.title,
       description: newReport.description,
-      severity: newReport.severity || 'medium',
-      status: 'draft',
-      evidenceLinks: newReport.evidenceLinks || []
+      timestamp: new Date().toISOString(),
+      status: 'open'
     };
 
     setReports(prev => [report, ...prev]);
-    setNewReport({ title: '', description: '', severity: 'medium', evidenceLinks: [] });
+    setNewReport({ title: '', description: '' });
   };
 
-  const getSeverityColor = (severity: Report['severity']) => {
-    switch (severity) {
-      case 'critical':
-        return isDark ? '#ef4444' : '#dc2626';
-      case 'high':
-        return isDark ? '#f97316' : '#ea580c';
-      case 'medium':
-        return isDark ? '#f59e0b' : '#d97706';
-      case 'low':
-        return isDark ? '#10b981' : '#059669';
+  const getStatusColor = (status: Report['status']) => {
+    switch (status) {
+      case 'open':
+        return 'bg-yellow-600 text-yellow-100';
+      case 'investigating':
+        return 'bg-blue-600 text-blue-100';
+      case 'closed':
+        return 'bg-green-600 text-green-100';
       default:
-        return isDark ? '#6b7280' : '#4b5563';
+        return 'bg-gray-600 text-gray-100';
     }
   };
 
   return (
-    <View style={{
-      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-      padding: 16,
-      borderRadius: 6,
-      marginBottom: 24
-    }}>
-      <Text style={{
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: isDark ? '#10b981' : '#059669',
-        marginBottom: 16
-      }}>
-        Incident Reports
-      </Text>
-
-      {/* Create New Report Form */}
-      <View style={{
-        backgroundColor: isDark ? '#374151' : '#e5e7eb',
-        padding: 16,
-        borderRadius: 6,
-        marginBottom: 16
-      }}>
-        <Text style={{
-          color: isDark ? '#ffffff' : '#111827',
-          marginBottom: 8,
-          fontWeight: 'bold'
-        }}>
-          Create New Report
-        </Text>
-
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{
-            color: isDark ? '#d1d5db' : '#4b5563',
-            marginBottom: 4
-          }}>
-            Title
+    <ScrollView className="flex-1 bg-dark-gray-900">
+      <View className="max-w-4xl mx-auto p-4">
+        <View className="bg-dark-gray-800 rounded-lg p-4 mb-6">
+          <Text className="text-xl font-bold text-gray-200 mb-4">
+            Submit New Report
           </Text>
-          <TextInput
-            style={{
-              backgroundColor: isDark ? '#1f2937' : '#ffffff',
-              padding: 8,
-              borderRadius: 4,
-              color: isDark ? '#ffffff' : '#111827'
-            }}
-            value={newReport.title}
-            onChangeText={(text) => setNewReport(prev => ({ ...prev, title: text }))}
-            placeholder="Report title..."
-            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-          />
-        </View>
 
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{
-            color: isDark ? '#d1d5db' : '#4b5563',
-            marginBottom: 4
-          }}>
-            Description
-          </Text>
-          <TextInput
-            style={{
-              backgroundColor: isDark ? '#1f2937' : '#ffffff',
-              padding: 8,
-              borderRadius: 4,
-              color: isDark ? '#ffffff' : '#111827',
-              height: 100,
-              textAlignVertical: 'top'
-            }}
-            multiline
-            value={newReport.description}
-            onChangeText={(text) => setNewReport(prev => ({ ...prev, description: text }))}
-            placeholder="Detailed description of the incident..."
-            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-          />
-        </View>
-
-        <View style={{ marginBottom: 12 }}>
-          <Text style={{
-            color: isDark ? '#d1d5db' : '#4b5563',
-            marginBottom: 4
-          }}>
-            Severity
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {(['low', 'medium', 'high', 'critical'] as const).map((severity) => (
-              <TouchableOpacity
-                key={severity}
-                style={{
-                  backgroundColor: newReport.severity === severity
-                    ? getSeverityColor(severity)
-                    : isDark ? '#1f2937' : '#ffffff',
-                  padding: 8,
-                  borderRadius: 4,
-                  flex: 1,
-                  alignItems: 'center'
-                }}
-                onPress={() => setNewReport(prev => ({ ...prev, severity }))}
-              >
-                <Text style={{
-                  color: newReport.severity === severity
-                    ? '#ffffff'
-                    : isDark ? '#d1d5db' : '#4b5563',
-                  textTransform: 'capitalize'
-                }}>
-                  {severity}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View className="mb-4">
+            <Text className="text-gray-300 text-sm mb-2">Title</Text>
+            <TextInput
+              className="input-field"
+              value={newReport.title}
+              onChangeText={(text: string) => setNewReport(prev => ({ ...prev, title: text }))}
+              placeholder="Report title..."
+              placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+            />
           </View>
+
+          <View className="mb-4">
+            <Text className="text-gray-300 text-sm mb-2">Description</Text>
+            <TextInput
+              className="input-field min-h-[100px]"
+              multiline
+              value={newReport.description}
+              onChangeText={(text: string) => setNewReport(prev => ({ ...prev, description: text }))}
+              placeholder="Detailed description of the incident..."
+              placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            className="btn-primary"
+            disabled={!newReport.title || !newReport.description}
+          >
+            <Text className="text-white text-center font-bold">
+              Submit Report
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={{
-            backgroundColor: isDark ? '#10b981' : '#059669',
-            padding: 12,
-            borderRadius: 6,
-            alignItems: 'center'
-          }}
-          onPress={handleCreateReport}
-        >
-          <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>
-            Create Report
+        <View className="bg-dark-gray-800 rounded-lg p-4">
+          <Text className="text-xl font-bold text-gray-200 mb-4">
+            Recent Reports
           </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Reports List */}
-      <ScrollView style={{ maxHeight: 400 }}>
-        {reports.map((report) => (
-          <View
-            key={report.id}
-            style={{
-              backgroundColor: isDark ? '#374151' : '#e5e7eb',
-              padding: 16,
-              borderRadius: 6,
-              marginBottom: 8
-            }}
-          >
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 8
-            }}>
-              <Text style={{
-                color: isDark ? '#ffffff' : '#111827',
-                fontWeight: 'bold',
-                fontSize: 16
-              }}>
-                {report.title}
-              </Text>
-              <View style={{
-                backgroundColor: getSeverityColor(report.severity),
-                paddingVertical: 4,
-                paddingHorizontal: 8,
-                borderRadius: 12
-              }}>
-                <Text style={{
-                  color: '#ffffff',
-                  fontSize: 12,
-                  textTransform: 'uppercase'
-                }}>
-                  {report.severity}
+          {reports.length === 0 ? (
+            <Text className="text-gray-500 text-center p-4">
+              No reports submitted yet
+            </Text>
+          ) : (
+            reports.map(report => (
+              <View key={report.id} className="border-b border-dark-gray-700 last:border-0 py-4">
+                <View className="flex-row justify-between items-start mb-2">
+                  <Text className="text-lg font-bold text-gray-200">
+                    {report.title}
+                  </Text>
+                  <View className={`px-2 py-1 rounded-full ${getStatusColor(report.status)}`}>
+                    <Text className="text-xs font-medium">
+                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-gray-400 mb-2">
+                  {report.description}
+                </Text>
+                <Text className="text-gray-500 text-sm">
+                  {new Date(report.timestamp).toLocaleString()}
                 </Text>
               </View>
-            </View>
-
-            <Text style={{
-              color: isDark ? '#d1d5db' : '#4b5563',
-              marginBottom: 8
-            }}>
-              {report.description}
-            </Text>
-
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <Text style={{
-                color: isDark ? '#9ca3af' : '#6b7280',
-                fontSize: 12
-              }}>
-                {new Date(report.timestamp).toLocaleString()}
-              </Text>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: report.status === 'draft'
-                    ? (isDark ? '#10b981' : '#059669')
-                    : (isDark ? '#6b7280' : '#4b5563'),
-                  paddingVertical: 4,
-                  paddingHorizontal: 8,
-                  borderRadius: 4
-                }}
-              >
-                <Text style={{
-                  color: '#ffffff',
-                  fontSize: 12,
-                  textTransform: 'uppercase'
-                }}>
-                  {report.status === 'draft' ? 'Submit to ANSSI' : 'Submitted'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+            ))
+          )}
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 

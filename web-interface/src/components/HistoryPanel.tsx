@@ -10,86 +10,44 @@ interface HistoryPanelProps {
 export const HistoryPanel: React.FC<HistoryPanelProps> = ({ onSelectFromHistory }) => {
   const { history, clearHistory } = useHistory();
   const { theme } = useTheme();
-
   const isDark = theme === 'dark';
 
   return (
-    <View style={{ 
-      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-      padding: 16,
-      borderRadius: 6,
-      marginBottom: 24 
-    }}>
-      <View style={{ 
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16
-      }}>
-        <Text style={{ 
-          fontSize: 18,
-          fontWeight: 'bold',
-          color: isDark ? '#10b981' : '#059669'
-        }}>
+    <View className="bg-dark-gray-800 p-4 rounded-md mb-6">
+      <View className="flex flex-row justify-between items-center mb-4">
+        <Text className="text-lg font-bold text-hacker-green">
           Command History
         </Text>
         <TouchableOpacity
           onPress={clearHistory}
-          style={{
-            backgroundColor: isDark ? '#374151' : '#e5e7eb',
-            padding: 8,
-            borderRadius: 4
-          }}
+          className="px-3 py-1 rounded-md bg-dark-gray-700 hover:bg-dark-gray-600"
         >
-          <Text style={{ color: isDark ? '#9ca3af' : '#4b5563' }}>Clear History</Text>
+          <Text className="text-gray-300">Clear History</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ maxHeight: 200 }}>
-        {history.map((entry, index) => (
+      <ScrollView className="max-h-96">
+        {history.map(entry => (
           <TouchableOpacity
-            key={index}
-            style={{
-              backgroundColor: isDark ? '#374151' : '#e5e7eb',
-              padding: 12,
-              borderRadius: 6,
-              marginBottom: 8
-            }}
-            onPress={() => onSelectFromHistory(entry.tool.id, entry.params)}
+            key={entry.id}
+            onPress={() => onSelectFromHistory(entry)}
+            className="p-3 mb-2 rounded-md bg-dark-gray-900 hover:bg-dark-gray-700"
           >
-            <Text style={{ 
-              color: isDark ? '#ffffff' : '#111827',
-              fontWeight: 'bold'
-            }}>
-              {entry.tool.name}
+            <Text className="text-lg font-semibold text-gray-200 mb-1">
+              {entry.tool}
             </Text>
-            <Text style={{ 
-              color: isDark ? '#9ca3af' : '#6b7280',
-              fontSize: 12,
-              marginTop: 4
-            }}>
+            <Text className="text-xs text-gray-400">
               {new Date(entry.timestamp).toLocaleString()}
             </Text>
-            <Text style={{ 
-              color: isDark ? '#d1d5db' : '#4b5563',
-              fontSize: 14,
-              marginTop: 4,
-              fontFamily: 'monospace'
-            }}>
+            <Text className="mt-1 text-sm font-mono whitespace-pre-wrap text-gray-300">
               {JSON.stringify(entry.params, null, 2)}
             </Text>
-            <View style={{ 
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop: 8
-            }}>
-              <Text style={{ 
-                color: entry.response.status === 'success' 
-                  ? (isDark ? '#34d399' : '#059669')
-                  : (isDark ? '#ef4444' : '#dc2626'),
-                fontSize: 12,
-                marginRight: 8
-              }}>
+            <View className="flex flex-row items-center mt-2">
+              <Text className={`text-xs mr-2 ${
+                entry.response.status === 'success'
+                  ? 'text-hacker-green'
+                  : 'text-red-500'
+              }`}>
                 {entry.response.status}
               </Text>
             </View>

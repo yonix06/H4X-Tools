@@ -4,6 +4,16 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   darkMode: 'class',
+  safelist: [
+    'dark',
+    'bg-dark-gray-900',
+    'text-gray-100',
+    'bg-gray-100',
+    'text-gray-900',
+    {
+      pattern: /(bg|text|border)-(dark-gray|hacker-green|gray|red|blue|yellow|orange)-(100|200|300|400|500|600|700|800|900)/,
+    },
+  ],
   theme: {
     extend: {
       colors: {
@@ -25,7 +35,29 @@ module.exports = {
           800: '#1f2937',
           900: '#111827',
         },
-        'terminal-black': '#282c34',
+        inherit: 'inherit',
+      },
+      fontFamily: {
+        sans: [
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
+        mono: [
+          'ui-monospace',
+          'SFMono-Regular',
+          'Monaco',
+          'Menlo',
+          'Consolas',
+          'Liberation Mono',
+          'Courier New',
+          'monospace',
+        ],
       },
       spacing: {
         '400': '400px',
@@ -43,6 +75,9 @@ module.exports = {
       maxWidth: {
         '8xl': '88rem',
       },
+      maxHeight: {
+        '400': '400px',
+      },
     },
   },
   plugins: [
@@ -50,5 +85,6 @@ module.exports = {
       strategy: 'class',
     }),
   ],
+  important: true,
 }
 

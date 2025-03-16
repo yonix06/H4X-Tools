@@ -12,91 +12,75 @@ const RootLayout: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <View style={{ 
-      flex: 1, 
-      flexDirection: 'column', 
-      height: '100vh', 
-      backgroundColor: isDark ? '#111827' : '#ffffff'
-    }}>
+    <View className="min-h-screen bg-dark-gray-900">
       {/* Header */}
-      <View style={{ 
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ 
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: isDark ? '#10b981' : '#059669',
-            marginRight: 8
-          }}>
-            H4X-Tools
-          </Text>
-          <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
-            Web Interface
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          {/* Navigation Menu */}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              style={{
-                backgroundColor: isActive('/') 
-                  ? (isDark ? '#047857' : '#d1fae5')
-                  : (isDark ? '#374151' : '#e5e7eb'),
-                padding: 8,
-                borderRadius: 4,
-              }}
-              onPress={() => navigate('/')}
-            >
-              <Text style={{ 
-                color: isActive('/') 
-                  ? (isDark ? '#ffffff' : '#047857')
-                  : (isDark ? '#9ca3af' : '#4b5563')
-              }}>
-                Tools
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: isActive('/investigation') 
-                  ? (isDark ? '#047857' : '#d1fae5')
-                  : (isDark ? '#374151' : '#e5e7eb'),
-                padding: 8,
-                borderRadius: 4,
-              }}
-              onPress={() => navigate('/investigation')}
-            >
-              <Text style={{ 
-                color: isActive('/investigation')
-                  ? (isDark ? '#ffffff' : '#047857')
-                  : (isDark ? '#9ca3af' : '#4b5563')
-              }}>
-                Investigation
-              </Text>
-            </TouchableOpacity>
+      <View className="bg-dark-gray-800 p-4">
+        <View className="max-w-7xl mx-auto flex flex-row justify-between items-center">
+          {/* Logo */}
+          <View className="flex flex-row items-center">
+            <Text className="text-2xl font-bold text-hacker-green mr-2">
+              H4X-Tools
+            </Text>
+            <Text className="text-gray-400">
+              Web Interface
+            </Text>
           </View>
 
-          {/* Theme Toggle */}
-          <TouchableOpacity
-            onPress={toggleTheme}
-            style={{
-              backgroundColor: isDark ? '#374151' : '#e5e7eb',
-              padding: 8,
-              borderRadius: 4,
-            }}
-          >
-            <Text style={{ color: isDark ? '#9ca3af' : '#4b5563' }}>
-              {isDark ? '🌞 Light Mode' : '🌙 Dark Mode'}
-            </Text>
-          </TouchableOpacity>
+          <View className="flex flex-row items-center gap-4">
+            {/* Navigation Menu */}
+            <View className="flex flex-row gap-2">
+              <TouchableOpacity
+                className={`px-3 py-2 rounded-md ${
+                  isActive('/') 
+                    ? 'bg-hacker-green text-white'
+                    : 'bg-dark-gray-700 text-gray-300 hover:text-white'
+                }`}
+                onPress={() => navigate('/')}
+              >
+                <Text className="text-inherit">
+                  Dashboard
+                </Text>
+              </TouchableOpacity>
 
-          <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>v1.0.0</Text>
+              <TouchableOpacity
+                className={`px-3 py-2 rounded-md ${
+                  isActive('/tools')
+                    ? 'bg-hacker-green text-white'
+                    : 'bg-dark-gray-700 text-gray-300 hover:text-white'
+                }`}
+                onPress={() => navigate('/tools')}
+              >
+                <Text className="text-inherit">
+                  Tools
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className={`px-3 py-2 rounded-md ${
+                  isActive('/investigation')
+                    ? 'bg-hacker-green text-white'
+                    : 'bg-dark-gray-700 text-gray-300 hover:text-white'
+                }`}
+                onPress={() => navigate('/investigation')}
+              >
+                <Text className="text-inherit">
+                  Investigation
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Theme Toggle */}
+            <TouchableOpacity
+              onPress={toggleTheme}
+              className="px-3 py-2 rounded-md bg-dark-gray-700 text-gray-300 hover:text-white"
+            >
+              <Text className="text-inherit">
+                {isDark ? '🌞 Light Mode' : '🌙 Dark Mode'}
+              </Text>
+            </TouchableOpacity>
+
+            <Text className="text-gray-400">v1.0.0</Text>
+          </View>
         </View>
       </View>
 
@@ -104,14 +88,8 @@ const RootLayout: React.FC = () => {
       <Outlet />
 
       {/* Footer */}
-      <View style={{ 
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16
-      }}>
-        <Text style={{ 
-          color: isDark ? '#9ca3af' : '#6b7280',
-          textAlign: 'center'
-        }}>
+      <View className="bg-dark-gray-800 p-4 mt-auto">
+        <Text className="text-gray-400 text-center">
           H4X-Tools Web Interface - Based on the original H4X-Tools by vil - FOR EDUCATIONAL PURPOSES ONLY
         </Text>
       </View>

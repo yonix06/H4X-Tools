@@ -2,17 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Core RNW + Tailwind Integration */
+div[class*="css-view-"],
+div[class*="css-text-"],
+div[class*="css-textinput-"] {
+  all: unset !important;
+  display: flex !important;
+  flex-direction: column !important;
+  color: inherit !important;
+  background: inherit !important;
+}
+
+/* Fix CSS inheritance for all RNW components */
+[class*="css-"] {
+  all: unset !important; 
+  display: inherit !important;
+}
+
 @layer base {
   :root {
     --hacker-green: #10b981;
     --dark-gray-800: #1f2937;
     --dark-gray-900: #111827;
   }
-  
+
   body {
-    @apply bg-dark-gray-900 text-gray-100;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply min-h-screen text-gray-100 bg-dark-gray-900;
+  }
+}
+
+  .dark body {
+    @apply bg-dark-gray-900;
+  }
+
+  .light body {
+    @apply bg-gray-100;
   }
 }
 
@@ -56,4 +80,50 @@
   .scrollbar-custom::-webkit-scrollbar-thumb {
     @apply bg-gray-600 rounded-full hover:bg-hacker-green transition-colors duration-200;
   }
+}
+
+/* React Native Web specific overrides */
+div[class*="css-view-"] {
+  @apply flex;
+  display: flex !important;
+  flex-direction: column;
+}
+
+div[class*="css-text-"] {
+  color: inherit;
+}
+
+/* Ensure proper className inheritance */
+[class*="css-"] {
+  all: revert;
+  display: inherit;
+}
+
+/* Reset RNW default styles */
+[style*="box-sizing: border-box"] {
+  all: revert;
+  display: inherit;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.gray.600') theme('colors.dark-gray.800');
+}
+
+/* Webkit scrollbar */
+*::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+*::-webkit-scrollbar-track {
+  @apply bg-dark-gray-800;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full transition-colors duration-200;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  @apply bg-hacker-green;
 }

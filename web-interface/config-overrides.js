@@ -1,31 +1,67 @@
 const path = require('path');
 
 module.exports = function override(config, env) {
-  // Add react-native-web alias
+  // Add React Native Web alias
   config.resolve.alias = {
-    ...(config.resolve.alias || {}),
+    ...config.resolve.alias,
     'react-native$': 'react-native-web',
   };
 
-  // Enable tree-shaking for react-native-web
-  config.resolve.extensions = [
-    '.web.js',
-    '.web.jsx',
-    '.web.ts',
-    '.web.tsx',
-    ...config.resolve.extensions,
-  ];
-
-  // Add postcss loader for Tailwind
-  const oneOf = config.module.rules.find(rule => rule.oneOf);
-  if (oneOf) {
-    const cssRule = oneOf.oneOf.find(rule => 
+  // Ensure proper CSS processing order
+  const oneOfRule = config.module.rules.find((rule) => rule.oneOf);
+  if (oneOfRule) {
+    const cssRules = oneOfRule.oneOf.filter((rule) => 
       rule.test && rule.test.toString().includes('css')
     );
-    if (cssRule) {
-      cssRule.use = ['style-loader', 'css-loader', 'postcss-loader'];
-    }
+    
+    cssRules.forEach((rule) => {
+      if (rule.use) {
+        const postCSSIndex = rule.use.findIndex(
+          (loader) => loader.loader && loader.loader.includes('postcss-loader')
+        );
+        if (postCSSIndex !== -1) {
+          // Ensure Tailwind processes before other PostCSS plugins
+          rule.use[postCSSIndex].options = {
+            ...rule.use[postCSSIndex].options,
+            postcssOptions: {
+              ...rule.use[postCSSIndex].options?.postcssOptions,
+              plugins: [
+                require('tailwindcss'),
+                require('postcss-flexbugs-fixes'),
+                require('postcss-preset-env')({
+                  autoprefixer: {
+                    flexbox: 'no-2009'
+                  },
+                  stage: 3
+                }),
+                ...(rule.use[postCSSIndex].options?.postcssOptions?.plugins || [])
+              ]
+            }
+          };
+        }
+      }
+    });
+  }
+
+  // Add babel configuration for RNW
+  const babelLoader = config.module.rules.find(
+    (rule) => rule.use && rule.use.loader && rule.use.loader.includes('babel-loader')
+  );
+
+  if (babelLoader) {
+    babelLoader.use.options = {
+      ...babelLoader.use.options,
+      plugins: [
+        ...babelLoader.use.options.plugins || [],
+        'react-native-web',
+      ],
+      presets: [
+        ...babelLoader.use.options.presets || [],
+        '@babel/preset-react',
+        '@babel/preset-typescript'
+      ]
+    };
   }
 
   return config;
-};
+}
