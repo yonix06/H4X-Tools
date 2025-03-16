@@ -1,5 +1,5 @@
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import os, time, subprocess
 from helper import printer, timer
@@ -37,7 +37,6 @@ class Scan:
     @staticmethod
     def scan_windows() -> None:
         printer.info(f"Windows system detected... Performing {Style.BRIGHT}netsh{Style.RESET_ALL} scan...")
-        time.sleep(1)
         try:
             output = subprocess.check_output(["netsh", "wlan", "show", "networks"])
             Scan.parse_output(output.decode("utf-8"), "windows")
@@ -47,7 +46,6 @@ class Scan:
     @staticmethod
     def scan_linux() -> None:
         printer.info(f"Linux system detected... Performing {Style.BRIGHT}nmcli{Style.RESET_ALL} scan...")
-        time.sleep(1)
         try:
             output = subprocess.check_output(["nmcli", "dev", "wifi"])
             Scan.parse_output(output.decode("utf-8"), "linux")

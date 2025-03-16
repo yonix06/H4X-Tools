@@ -1,5 +1,5 @@
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,15 +13,15 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 from utils import (
     email_search,
-    local_user_enum,
+    leak_search,
+    local_users,
     search_username,
     ig_scrape,
     whois_lookup,
-    webhook_spammer,
     port_scanner,
     ip_lookup,
     phonenumber_lookup,
@@ -34,10 +34,8 @@ from utils import (
     caesar_cipher,
     basexx,
     wifi_vault,
-    cybercrime_int
 )
 from helper import printer
-import time, os
 
 
 def handle_ig_scrape() -> None:
@@ -48,7 +46,6 @@ def handle_ig_scrape() -> None:
     """
     target = str(printer.inp("Enter a target username : \t")).replace(" ", "_")
     ig_scrape.Scrape(target)
-    time.sleep(1)
 
 
 def handle_web_search() -> None:
@@ -101,18 +98,6 @@ def handle_port_scanner() -> None:
     ip = str(printer.inp("Enter a IP address OR domain : \t"))
     port_range = int(printer.inp("Enter number of ports to scan : \t"))
     port_scanner.Scan(ip, port_range)
-
-
-def handle_webhook_spammer() -> None:
-    """
-    Handles the Webhook Spammer util.
-    """
-    url = str(printer.inp("Enter a webhook url : \t"))
-    amount = int(printer.inp("Enter a amount of messages : \t"))
-    message = str(printer.inp("Enter a message : \t"))
-    username = str(printer.inp("Enter a username : \t"))
-    throttle = int(printer.inp("Enter time of sleep (seconds) : \t"))
-    webhook_spammer.Spam(url, amount, message, username, throttle)
 
 
 def handle_whois_lookup() -> None:
@@ -174,14 +159,12 @@ def handle_dir_buster() -> None:
     dirbuster.Scan(url)
 
 
-def handle_local_user_enum() -> None:
+def handle_local_users() -> None:
     """
     Handles the Local User Enum.
     """
     printer.info(f"Scanning for local accounts...")
-    printer.info(f"This is meant to be ran on a TARGET machine to gain (maybe) useful information.")
-    time.sleep(1)
-    local_user_enum.Scan()
+    local_users.Scan()
 
 
 def handle_caesar_cipher() -> None:
@@ -203,9 +186,9 @@ def handle_basexx() -> None:
     basexx.BaseXX(message, mode, encoding)
 
 
-def handle_cybercrime_int() -> None:
+def handle_leak_search() -> None:
     """
     Handles the Cybercrime Intelligence util.
     """
     target = printer.inp("Enter a target (email/domain) : \t")
-    cybercrime_int.Scan(target)
+    leak_search.Scan(target)
