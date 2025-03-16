@@ -29,8 +29,7 @@ div[class*="css-textinput-"] {
   body {
     @apply min-h-screen text-gray-100 bg-dark-gray-900;
   }
-}
-
+  
   .dark body {
     @apply bg-dark-gray-900;
   }

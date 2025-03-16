@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Tool } from '../services/types';
 import { ApiResponse } from '../services/api';
 
-interface HistoryEntry {
+export interface HistoryEntry {
   timestamp: string;
   tool: Tool;
   params: Record<string, string>;

@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text } from 'react-native-web';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { HistoryProvider } from './contexts/HistoryContext';
-import RootLayout from './components/RootLayout';
-import Tools from './pages/Tools';
-import Investigation from './pages/Investigation';
-import SecurityDashboard from './pages/SecurityDashboard';
-import './App.css';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { HistoryProvider } from '../contexts/HistoryContext';
+import RootLayout from '../components/RootLayout';
+import Tools from './Tools';
+import Investigation from './Investigation';
+import SecurityDashboard from './SecurityDashboard';
+
 
 const WelcomePage: React.FC = () => (
   <View className="flex-1 p-6 flex items-center justify-center">

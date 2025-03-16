@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native-web';
-import { useHistory } from '../contexts/HistoryContext';
+import { useHistory, HistoryEntry } from '../contexts/HistoryContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface HistoryPanelProps {
-  onSelectFromHistory: (toolId: string, params: Record<string, string>) => void;
+  onSelectFromHistory: (entry: HistoryEntry) => void;
 }
 
 export const HistoryPanel: React.FC<HistoryPanelProps> = ({ onSelectFromHistory }) => {
@@ -27,9 +27,9 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ onSelectFromHistory 
       </View>
 
       <ScrollView className="max-h-96">
-        {history.map(entry => (
+        {history.map((entry, index) => (
           <TouchableOpacity
-            key={entry.id}
+            key={index} // Using index as key since HistoryEntry doesn't have an id
             onPress={() => onSelectFromHistory(entry)}
             className="p-3 mb-2 rounded-md bg-dark-gray-900 hover:bg-dark-gray-700"
           >

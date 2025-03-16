@@ -25,11 +25,9 @@
     ],
     "types": [
       "node",
-      "jest",
       "react",
       "react-dom",
       "react-native",
-      "@testing-library/jest-dom"
     ]
   },
   "include": [
