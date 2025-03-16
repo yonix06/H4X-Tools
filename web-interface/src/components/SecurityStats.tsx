@@ -1,80 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native-web';
+import { View, Text } from 'react-native-web';
 import { useTheme } from '../contexts/ThemeContext';
-import { securityApi } from '../services/securityApi';
+import { SecurityEvent } from '../services/securityEvents';
 
-interface BannedIP {
-  ip: string;
-  timestamp: string;
-  attempts: number;
-  jail: string;
-  status: 'active' | 'expired';
+interface SecurityStats {
+  total: number;
+  by_severity: Record<SecurityEvent['severity'], number>;
+  by_status: Record<SecurityEvent['status'], number>;
+  by_type: Record<string, number>;
 }
 
-const SecurityStats: React.FC = () => {
+export const SecurityStats: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const [stats, setStats] = useState<SecurityStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [bannedIPs, setBannedIPs] = useState<BannedIP[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStats = async () => {
       try {
-        const response = await securityApi.getFail2banStatus();
-        if (response.status === 'success' && response.data) {
-          setBannedIPs(response.data);
-        } else {
-          setError(response.message || 'Failed to fetch security data');
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/security/events`);
+        const data = await response.json();
+        if (data.status === 'success' && Array.isArray(data.data)) {
+          const events = data.data as SecurityEvent[];
+          const stats: SecurityStats = {
+            total: events.length,
+            by_severity: {
+              critical: 0,
+              high: 0,
+              medium: 0,
+              low: 0
+            },
+            by_status: {
+              new: 0,
+              investigating: 0,
+              resolved: 0
+            },
+            by_type: {}
+          };
+
+          events.forEach(event => {
+            stats.by_severity[event.severity]++;
+            stats.by_status[event.status]++;
+            stats.by_type[event.event_type] = (stats.by_type[event.event_type] || 0) + 1;
+          });
+
+          setStats(stats);
         }
-      } catch (err) {
-        setError('Failed to fetch security data');
+      } catch (error) {
+        console.error('Failed to fetch security stats:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-    // Set up polling every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const totalBans = bannedIPs.length;
-  const activeBans = bannedIPs.filter(ip => ip.status === 'active').length;
-  const recentAttempts = bannedIPs.reduce((sum, ip) => sum + ip.attempts, 0);
-
-  const stats = [
-    { label: 'Total Banned IPs', value: totalBans },
-    { label: 'Active Bans', value: activeBans },
-    { label: 'Recent Failed Attempts', value: recentAttempts }
-  ];
-
-  if (error) {
-    return (
-      <View style={{
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16,
-        borderRadius: 6,
-        marginBottom: 24
+  const StatBox: React.FC<{
+    label: string;
+    value: number;
+    color?: string;
+  }> = ({ label, value, color }) => (
+    <View style={{
+      backgroundColor: isDark ? '#374151' : '#e5e7eb',
+      padding: 12,
+      borderRadius: 6,
+      minWidth: 120
+    }}>
+      <Text style={{
+        color: color || (isDark ? '#d1d5db' : '#4b5563'),
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 4
       }}>
-        <Text style={{
-          color: isDark ? '#ef4444' : '#dc2626',
-          textAlign: 'center'
-        }}>
-          {error}
-        </Text>
-      </View>
-    );
-  }
+        {value}
+      </Text>
+      <Text style={{
+        color: isDark ? '#9ca3af' : '#6b7280',
+        fontSize: 12
+      }}>
+        {label}
+      </Text>
+    </View>
+  );
 
   return (
     <View style={{
       backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
       padding: 16,
       borderRadius: 6,
-      marginBottom: 24,
-      opacity: isLoading ? 0.7 : 1
+      marginBottom: 24
     }}>
       <Text style={{
         fontSize: 18,
@@ -82,142 +100,100 @@ const SecurityStats: React.FC = () => {
         color: isDark ? '#10b981' : '#059669',
         marginBottom: 16
       }}>
-        Security Statistics {isLoading && '(Updating...)'}
+        Security Overview
       </Text>
 
-      {/* Stats Grid */}
-      <View style={{
-        flexDirection: 'row',
-        gap: 16,
-        marginBottom: 24,
-        flexWrap: 'wrap'
-      }}>
-        {stats.map((stat, index) => (
-          <View
-            key={index}
-            style={{
-              backgroundColor: isDark ? '#374151' : '#e5e7eb',
-              padding: 16,
-              borderRadius: 6,
-              flex: 1,
-              minWidth: 200
-            }}
-          >
-            <Text style={{
-              color: isDark ? '#d1d5db' : '#4b5563',
-              marginBottom: 4
-            }}>
-              {stat.label}
-            </Text>
-            <Text style={{
-              fontSize: 24,
-              fontWeight: 'bold',
-              color: isDark ? '#ef4444' : '#dc2626'
-            }}>
-              {stat.value}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Banned IPs List */}
-      <View style={{
-        backgroundColor: isDark ? '#374151' : '#e5e7eb',
-        padding: 16,
-        borderRadius: 6
-      }}>
-        <Text style={{
-          color: isDark ? '#ffffff' : '#111827',
-          fontWeight: 'bold',
-          marginBottom: 12
-        }}>
-          Recently Banned IPs
+      {isLoading ? (
+        <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
+          Loading statistics...
         </Text>
+      ) : stats ? (
+        <>
+          {/* Summary Stats */}
+          <View style={{
+            flexDirection: 'row',
+            gap: 12,
+            marginBottom: 16,
+            flexWrap: 'wrap'
+          }}>
+            <StatBox 
+              label="Total Events" 
+              value={stats.total}
+              color={isDark ? '#10b981' : '#059669'}
+            />
+            <StatBox 
+              label="New Events" 
+              value={stats.by_status.new}
+              color={isDark ? '#ef4444' : '#dc2626'}
+            />
+            <StatBox 
+              label="Investigating" 
+              value={stats.by_status.investigating}
+              color={isDark ? '#f59e0b' : '#d97706'}
+            />
+            <StatBox 
+              label="Resolved" 
+              value={stats.by_status.resolved}
+              color={isDark ? '#34d399' : '#059669'}
+            />
+          </View>
 
-        <ScrollView style={{ maxHeight: 300 }}>
-          {bannedIPs.length > 0 ? (
-            bannedIPs.map((ban, index) => (
-              <View
-                key={index}
-                style={{
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                  padding: 12,
-                  borderRadius: 4,
-                  marginBottom: 8,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <View>
-                  <Text style={{
-                    color: isDark ? '#ffffff' : '#111827',
-                    fontWeight: 'bold'
-                  }}>
-                    {ban.ip}
-                  </Text>
-                  <Text style={{
-                    color: isDark ? '#9ca3af' : '#6b7280',
-                    fontSize: 12
-                  }}>
-                    {new Date(ban.timestamp).toLocaleString()} - {ban.jail}
-                  </Text>
-                </View>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{
-                    color: isDark ? '#9ca3af' : '#6b7280',
-                    fontSize: 12
-                  }}>
-                    {ban.attempts} attempts
-                  </Text>
-                  <View style={{
-                    backgroundColor: ban.status === 'active'
-                      ? (isDark ? '#10b981' : '#059669')
-                      : (isDark ? '#6b7280' : '#9ca3af'),
-                    paddingVertical: 2,
-                    paddingHorizontal: 6,
-                    borderRadius: 12
-                  }}>
-                    <Text style={{
-                      color: '#ffffff',
-                      fontSize: 12,
-                      textTransform: 'uppercase'
-                    }}>
-                      {ban.status}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={{
-              color: isDark ? '#9ca3af' : '#6b7280',
-              textAlign: 'center',
-              padding: 16
-            }}>
-              No banned IPs found
-            </Text>
-          )}
-        </ScrollView>
-
-        <TouchableOpacity
-          style={{
-            backgroundColor: isDark ? '#10b981' : '#059669',
-            padding: 12,
-            borderRadius: 6,
-            alignItems: 'center',
-            marginTop: 12
-          }}
-          onPress={() => {/* TODO: Implement full log view */}}
-        >
-          <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>
-            View Full Logs
+          {/* Severity Breakdown */}
+          <Text style={{
+            color: isDark ? '#d1d5db' : '#4b5563',
+            fontWeight: 'bold',
+            marginBottom: 8
+          }}>
+            By Severity
           </Text>
-        </TouchableOpacity>
-      </View>
+          <View style={{
+            flexDirection: 'row',
+            gap: 12,
+            marginBottom: 16,
+            flexWrap: 'wrap'
+          }}>
+            {Object.entries(stats.by_severity).map(([severity, count]) => (
+              <StatBox
+                key={severity}
+                label={severity.toUpperCase()}
+                value={count}
+                color={
+                  severity === 'critical' ? (isDark ? '#ef4444' : '#dc2626') :
+                  severity === 'high' ? (isDark ? '#f97316' : '#ea580c') :
+                  severity === 'medium' ? (isDark ? '#f59e0b' : '#d97706') :
+                  (isDark ? '#10b981' : '#059669')
+                }
+              />
+            ))}
+          </View>
+
+          {/* Event Type Breakdown */}
+          <Text style={{
+            color: isDark ? '#d1d5db' : '#4b5563',
+            fontWeight: 'bold',
+            marginBottom: 8
+          }}>
+            By Type
+          </Text>
+          <View style={{
+            flexDirection: 'row',
+            gap: 12,
+            flexWrap: 'wrap'
+          }}>
+            {Object.entries(stats.by_type).map(([type, count]) => (
+              <StatBox
+                key={type}
+                label={type.toUpperCase()}
+                value={count}
+              />
+            ))}
+          </View>
+        </>
+      ) : (
+        <Text style={{ color: isDark ? '#ef4444' : '#dc2626' }}>
+          Failed to load security statistics
+        </Text>
+      )}
     </View>
   );
 };
-
-export default SecurityStats;

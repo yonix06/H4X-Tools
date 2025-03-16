@@ -5,6 +5,7 @@ import { HistoryProvider } from './contexts/HistoryContext';
 import RootLayout from './components/RootLayout';
 import Tools from './pages/Tools';
 import Investigation from './pages/Investigation';
+import SecurityDashboard from './pages/SecurityDashboard';
 import './App.css';
 
 const App: React.FC = () => {
@@ -16,6 +17,7 @@ const App: React.FC = () => {
             <Route path="/" element={<RootLayout />}>
               <Route index element={<Tools />} />
               <Route path="investigation" element={<Investigation />} />
+              <Route path="security" element={<SecurityDashboard />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native-web';
 import { useTheme } from '../contexts/ThemeContext';
 import Reports from '../components/Reports';
-import SecurityStats from '../components/SecurityStats';
+import { SecurityStats } from '../components/SecurityStats';
 import { securityApi } from '../services/securityApi';
 
 const Investigation: React.FC = () => {
