@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { securityEventsApi, SecurityEvent } from '../services/securityEvents';
 import { LoadingSpinner } from './LoadingSpinner';
 
-export const SecurityEvents: React.FC = () => {
+const SecurityEvents: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [events, setEvents] = useState<SecurityEvent[]>([]);
@@ -108,7 +108,7 @@ export const SecurityEvents: React.FC = () => {
               </View>
 
               <View className="flex flex-row gap-2">
-                <View className={`px-2 py-1 rounded-full ${getSeverityClass(event.severity)}`}>
+                <View className={`px-2 py-1 rounded-full ${getSeverityClass(event.severity)}`}> 
                   <Text className="text-white text-xs font-bold">
                     {event.severity.toUpperCase()}
                   </Text>
@@ -155,3 +155,5 @@ export const SecurityEvents: React.FC = () => {
     </View>
   );
 };
+
+export default SecurityEvents;
