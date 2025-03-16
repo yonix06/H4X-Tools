@@ -2,6 +2,7 @@
 import os
 import sys
 import json
+import subprocess
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -15,41 +16,92 @@ print(f"Adding to Python path: {root_dir}")
 # Dictionary to store available tools and their status
 available_tools = {}
 
-def import_tool(module_name):
+def import_tool(module_name, tool_id=None):
     try:
         module = importlib.import_module(f'utils.{module_name}')
-        available_tools[module_name] = True
+        available_tools[tool_id or module_name] = True
         return module
     except ImportError as e:
         print(f"Warning: Could not import {module_name}: {e}")
-        available_tools[module_name] = False
+        available_tools[tool_id or module_name] = False
         return None
 
 # Import tools with error handling
 tools = {
-    'ig_scrape': import_tool('ig_scrape'),
-    'websearch': import_tool('websearch'),
-    'phonenumber_lookup': import_tool('phonenumber_lookup'),
-    'ip_lookup': import_tool('ip_lookup'),
-    'port_scanner': import_tool('port_scanner'),
-    'search_username': import_tool('search_username'),
-    'cybercrime_int': import_tool('cybercrime_int'),
-    'email_search': import_tool('email_search'),
-    'webhook_spammer': import_tool('webhook_spammer'),
-    'whois_lookup': import_tool('whois_lookup'),
-    'smsbomber': import_tool('smsbomber'),
-    'fake_info_generator': import_tool('fake_info_generator'),
-    'web_scrape': import_tool('web_scrape'),
-    'wifi_finder': import_tool('wifi_finder'),
-    'wifi_vault': import_tool('wifi_vault'),
-    'dirbuster': import_tool('dirbuster'),
-    'local_user_enum': import_tool('local_user_enum'),
-    'caesar_cipher': import_tool('caesar_cipher'),
-    'basexx': import_tool('basexx')
+    'ig_scrape': import_tool('ig_scrape', 'ig_scrape'),
+    'web_search': import_tool('websearch', 'web_search'),
+    'phone_lookup': import_tool('phonenumber_lookup', 'phone_lookup'),
+    'ip_lookup': import_tool('ip_lookup', 'ip_lookup'),
+    'port_scanner': import_tool('port_scanner', 'port_scanner'),
+    'username_search': import_tool('search_username', 'username_search'),
+    'cybercrime_int': import_tool('cybercrime_int', 'cybercrime_int'),
+    'email_search': import_tool('email_search', 'email_search'),
+    'webhook_spammer': import_tool('webhook_spammer', 'webhook_spammer'),
+    'whois_lookup': import_tool('whois_lookup', 'whois_lookup'),
+    'sms_bomber': import_tool('smsbomber', 'sms_bomber'),
+    'fake_info_generator': import_tool('fake_info_generator', 'fake_info_generator'),
+    'web_scrape': import_tool('web_scrape', 'web_scrape'),
+    'wifi_finder': import_tool('wifi_finder', 'wifi_finder'),
+    'wifi_vault': import_tool('wifi_vault', 'wifi_vault'),
+    'dir_buster': import_tool('dirbuster', 'dir_buster'),
+    'local_user_enum': import_tool('local_user_enum', 'local_user_enum'),
+    'caesar_cipher': import_tool('caesar_cipher', 'caesar_cipher'),
+    'basexx': import_tool('basexx', 'basexx')
 }
 
 app = Flask(__name__)
 CORS(app)
+
+def get_fail2ban_status():
+    try:
+        # Use subprocess to run fail2ban-client status
+        result = subprocess.run(['fail2ban-client', 'status'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return {
+                "status": "success",
+                "data": result.stdout,
+                "timestamp": datetime.now().isoformat()
+            }
+        return {
+            "status": "error",
+            "message": "Failed to get Fail2ban status",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+def get_vpn_status():
+    try:
+        # Check OpenVPN status - adjust command based on your VPN service
+        result = subprocess.run(['systemctl', 'status', 'openvpn'], capture_output=True, text=True)
+        is_active = 'active (running)' in result.stdout
+        
+        # Get active connections if VPN is running
+        connections = []
+        if is_active:
+            # This command needs to be adjusted based on your VPN setup
+            conn_result = subprocess.run(['who'], capture_output=True, text=True)
+            connections = conn_result.stdout.splitlines()
+
+        return {
+            "status": "success",
+            "data": {
+                "is_active": is_active,
+                "connections": connections,
+                "last_check": datetime.now().isoformat()
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.route('/')
 def index():
@@ -59,7 +111,11 @@ def index():
         "message": "H4X-Tools API is running",
         "version": "1.0.0",
         "available_tools": available_tools,
-        "endpoints": ["/api/tools/<tool_id>"]
+        "endpoints": [
+            "/api/tools/<tool_id>",
+            "/api/security/fail2ban",
+            "/api/security/vpn"
+        ]
     })
 
 @app.route('/api/tools/<tool_id>', methods=['POST'])
@@ -69,7 +125,7 @@ def execute_tool(tool_id):
     if not available_tools.get(tool_id, False):
         return jsonify({
             "status": "error",
-            "message": f"Tool '{tool_id}' is not available or its dependencies are not installed",
+            "message": f"Tool '{tool_id}' is not available.",
             "timestamp": datetime.now().isoformat()
         }), 503
     
@@ -157,6 +213,14 @@ def execute_tool(tool_id):
             "message": str(e),
             "timestamp": datetime.now().isoformat()
         }), 500
+
+@app.route('/api/security/fail2ban')
+def fail2ban_status():
+    return jsonify(get_fail2ban_status())
+
+@app.route('/api/security/vpn')
+def vpn_status():
+    return jsonify(get_vpn_status())
 
 if __name__ == '__main__':
     print(f"Starting Flask server...")

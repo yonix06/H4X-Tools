@@ -10,15 +10,13 @@ charset-normalizer==2.1.1
 urllib3==1.26.20
 git+https://github.com/diezo/Ensta.git
 holehe==1.61
-async_timeout==4.0.0
-aiohttp==3.8.0
+aiohttp==3.7.4
 mechanize==0.4.8
 python-dateutil==2.8.2
 dnspython==2.3.0
 colorama==0.4.6
 pyfiglet==0.8.post1
 bs4==0.0.1
-whoisdomain==1.20250220.2
 psutil==5.9.0
 moviepy==2.0.0
 pillow==10.0.0
@@ -26,7 +24,7 @@ python-dotenv==1.0.0
 pyotp==2.8.0
 ntplib==0.4.0
 pyquery==2.0.0
-lxml==4.9.0
+lxml==4.6.3
 cssselect==1.2.0
 trio==0.22.0
 imageio==2.31.0

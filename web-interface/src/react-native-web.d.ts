@@ -36,6 +36,8 @@ declare module 'react-native-web' {
     onChangeText?: (text: string) => void;
     secureTextEntry?: boolean;
     keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
+    multiline?: boolean;
+    textAlignVertical?: string;
   }
 
   export const View: ComponentType<ViewProps>;

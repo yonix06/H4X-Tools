@@ -7,6 +7,8 @@ export interface Tool {
   description: string;
   inputs: InputField[];
   loading?: boolean;
+  isAvailable?: boolean;
+  category?: string;
 }
 
 // Type pour les champs d'entrée des outils
