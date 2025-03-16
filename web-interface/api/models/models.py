@@ -1,9 +1,8 @@
 """Database models for the API"""
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
-from .database import db
+from .database import db, Base
 
-class Investigation(db.Model):
+class Investigation(Base):
     """Investigation model for tracking security investigations"""
     __tablename__ = 'investigations'
 
@@ -33,7 +32,7 @@ class Investigation(db.Model):
             'tool_results_count': len(self.tool_results)
         }
 
-class InvestigationNote(db.Model):
+class InvestigationNote(Base):
     """Notes associated with an investigation"""
     __tablename__ = 'investigation_notes'
 
@@ -52,15 +51,15 @@ class InvestigationNote(db.Model):
             'updated_at': self.updated_at.isoformat()
         }
 
-class ToolResult(db.Model):
+class ToolResult(Base):
     """Results from running security tools"""
     __tablename__ = 'tool_results'
 
     id = db.Column(db.Integer, primary_key=True)
     tool_id = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    input_data = db.Column(JSONB, nullable=False)
-    result_data = db.Column(JSONB, nullable=True)
+    input_data = db.Column(db.JSON, nullable=False)
+    result_data = db.Column(db.JSON, nullable=True)
     status = db.Column(db.String(20), nullable=False, default='pending')
     investigation_id = db.Column(db.Integer, db.ForeignKey('investigations.id'), nullable=True)
 
@@ -75,7 +74,7 @@ class ToolResult(db.Model):
             'investigation_id': self.investigation_id
         }
 
-class SecurityEvent(db.Model):
+class SecurityEvent(Base):
     """Security events from system monitoring"""
     __tablename__ = 'security_events'
 
@@ -83,7 +82,7 @@ class SecurityEvent(db.Model):
     event_type = db.Column(db.String(50), nullable=False)
     source_ip = db.Column(db.String(50), nullable=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    details = db.Column(JSONB, nullable=False)
+    details = db.Column(db.JSON, nullable=False)
     severity = db.Column(db.String(20), nullable=False, default='medium')
     status = db.Column(db.String(20), nullable=False, default='new')
     investigation_id = db.Column(db.Integer, db.ForeignKey('investigations.id'), nullable=True)

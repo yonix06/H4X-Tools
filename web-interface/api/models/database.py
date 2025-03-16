@@ -1,13 +1,15 @@
 """Database initialization and configuration"""
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 from flask_sqlalchemy import SQLAlchemy
 
-# Initialize SQLAlchemy with no settings
 db = SQLAlchemy()
+Base = declarative_base()
 
 def init_db(app):
     """Initialize the database with the given Flask app"""
-    # Get database URL from environment variable with fallback
     database_url = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/h4xtools')
     
     # Configure database
@@ -15,7 +17,15 @@ def init_db(app):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
-    # Initialize extensions
+    # Initialize SQLAlchemy
     db.init_app(app)
-
+    
+    # Setup Alembic engine
+    engine = create_engine(database_url)
+    db.session = scoped_session(sessionmaker(bind=engine))
+    
+    # Import models here to ensure they're registered with SQLAlchemy
+    from .models import Investigation, InvestigationNote, ToolResult, SecurityEvent
+    Base.metadata.bind = engine
+    
     return db

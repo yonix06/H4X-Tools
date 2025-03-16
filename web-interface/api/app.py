@@ -1,12 +1,7 @@
 """Main Flask application module"""
 from flask import Flask
 from flask_cors import CORS
-from models.database import init_db, db
-import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
+from models.database import db, init_db
 
 def create_app():
     """Create and configure the Flask application"""
@@ -18,7 +13,7 @@ def create_app():
 
     @app.route('/api/health')
     def health_check():
-        return {'status': 'healthy', 'database': 'connected' if db.engine else 'disconnected'}
+        return {'status': 'healthy'}
 
     return app
 
