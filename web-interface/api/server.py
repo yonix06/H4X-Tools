@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import importlib.util
 from models.database import init_db, db
 from models.models import ToolResult, Investigation, InvestigationNote, SecurityEvent
+from utils.security_monitor import SecurityMonitor
 
 # Load environment variables
 load_dotenv()
@@ -61,73 +62,8 @@ CORS(app)
 # Initialize database
 init_db(app)
 
-def get_fail2ban_status():
-    try:
-        result = subprocess.run(['fail2ban-client', 'status'], capture_output=True, text=True)
-        if result.returncode == 0:
-            # Parse and store the event in database
-            event = SecurityEvent(
-                event_type='fail2ban',
-                details={'status': result.stdout},
-                severity='medium'
-            )
-            db.session.add(event)
-            db.session.commit()
-            
-            return {
-                "status": "success",
-                "data": result.stdout,
-                "timestamp": datetime.now().isoformat()
-            }
-        return {
-            "status": "error",
-            "message": "Failed to get Fail2ban status",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-def get_vpn_status():
-    try:
-        result = subprocess.run(['systemctl', 'status', 'openvpn'], capture_output=True, text=True)
-        is_active = 'active (running)' in result.stdout
-        
-        connections = []
-        if is_active:
-            conn_result = subprocess.run(['who'], capture_output=True, text=True)
-            connections = conn_result.stdout.splitlines()
-
-        # Store VPN status in database
-        event = SecurityEvent(
-            event_type='vpn',
-            details={
-                'is_active': is_active,
-                'connections': connections
-            },
-            severity='low' if is_active else 'high'
-        )
-        db.session.add(event)
-        db.session.commit()
-
-        return {
-            "status": "success",
-            "data": {
-                "is_active": is_active,
-                "connections": connections,
-                "last_check": datetime.now().isoformat()
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+# Initialize security monitor
+security_monitor = SecurityMonitor()
 
 @app.route('/')
 def index():
@@ -140,145 +76,86 @@ def index():
 
 @app.route('/api/tools/<tool_id>', methods=['POST'])
 def execute_tool(tool_id):
-    params = request.json
-    investigation_id = params.pop('investigation_id', None)
-    
-    if not available_tools.get(tool_id, False):
+    if tool_id not in TOOL_EXECUTORS:
         return jsonify({
-            "status": "error",
-            "message": f"Tool '{tool_id}' is not available.",
-            "timestamp": datetime.now().isoformat()
-        }), 503
-    
+            'status': 'error',
+            'message': 'Tool not found'
+        }), 404
+
+    data = request.json
+    investigation_id = data.pop('investigation_id', None)
+
     try:
-        tool_module = tools.get(tool_id)
-        if not tool_module:
-            return jsonify({
-                "status": "error",
-                "message": f"Unknown tool: {tool_id}",
-                "timestamp": datetime.now().isoformat()
-            }), 404
+        # Execute the tool
+        executor = TOOL_EXECUTORS[tool_id]
+        result = executor(data)
 
-        # Execute tool
-        result = None
-        if tool_id == 'ig_scrape':
-            result = tool_module.Scrape(params.get('username', '')).get_data()
-        elif tool_id == 'web_search':
-            result = tool_module.main(params.get('query', ''))
-        elif tool_id == 'phone_lookup':
-            result = tool_module.main(params.get('phone', ''))
-        elif tool_id == 'ip_lookup':
-            result = tool_module.main(params.get('ip', ''))
-        elif tool_id == 'port_scanner':
-            result = tool_module.main(
-                params.get('target', ''),
-                params.get('port_range', '1-1000')
-            )
-        elif tool_id == 'username_search':
-            result = tool_module.main(params.get('username', ''))
-        elif tool_id == 'cybercrime_int':
-            result = tool_module.main(params.get('target', ''))
-        elif tool_id == 'email_search':
-            result = tool_module.main(params.get('email', ''))
-        elif tool_id == 'webhook_spammer':
-            result = tool_module.main(
-                params.get('webhook_url', ''),
-                params.get('message', ''),
-                int(params.get('count', 10))
-            )
-        elif tool_id == 'whois_lookup':
-            result = tool_module.main(params.get('domain', ''))
-        elif tool_id == 'sms_bomber':
-            result = tool_module.main(
-                params.get('phone', ''),
-                int(params.get('count', 5))
-            )
-        elif tool_id == 'fake_info_generator':
-            result = tool_module.main(params.get('locale', 'en_US'))
-        elif tool_id == 'web_scrape':
-            result = tool_module.main(params.get('url', ''))
-        elif tool_id == 'wifi_finder':
-            result = tool_module.main()
-        elif tool_id == 'wifi_vault':
-            result = tool_module.main()
-        elif tool_id == 'dir_buster':
-            result = tool_module.main(
-                params.get('url', ''),
-                params.get('wordlist', '')
-            )
-        elif tool_id == 'local_user_enum':
-            result = tool_module.main()
-        elif tool_id == 'caesar_cipher':
-            result = tool_module.main(
-                params.get('message', ''),
-                int(params.get('shift', 0)),
-                params.get('mode', 'bruteforce')
-            )
-        elif tool_id == 'basexx':
-            result = tool_module.main(
-                params.get('message', ''),
-                params.get('mode', 'encode'),
-                params.get('base', '64')
-            )
-
-        # Store result in database
+        # Create tool result record
         tool_result = ToolResult(
             tool_id=tool_id,
-            input_data=params,
+            input_data=data,
             result_data=result,
             status='success',
             investigation_id=investigation_id
         )
         db.session.add(tool_result)
         db.session.commit()
-        
+
         return jsonify({
-            "status": "success",
-            "data": result,
-            "timestamp": datetime.now().isoformat()
+            'status': 'success',
+            'data': result,
+            'result_id': tool_result.id
         })
-    
+
     except Exception as e:
+        # Log the error and create error result record
         error_result = ToolResult(
             tool_id=tool_id,
-            input_data=params,
-            result_data={"error": str(e)},
+            input_data=data,
+            result_data={'error': str(e)},
             status='error',
             investigation_id=investigation_id
         )
         db.session.add(error_result)
         db.session.commit()
-        
+
         return jsonify({
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now().isoformat()
+            'status': 'error',
+            'message': str(e),
+            'result_id': error_result.id
         }), 500
 
-@app.route('/api/investigations', methods=['GET', 'POST'])
-def investigations():
-    if request.method == 'GET':
-        investigations = Investigation.query.all()
-        return jsonify({
-            "status": "success",
-            "data": [inv.to_dict() for inv in investigations],
-            "timestamp": datetime.now().isoformat()
-        })
-    
-    elif request.method == 'POST':
-        data = request.json
-        investigation = Investigation(
-            title=data['title'],
-            description=data.get('description', ''),
-            severity=data.get('severity', 'medium')
-        )
-        db.session.add(investigation)
-        db.session.commit()
-        return jsonify({
-            "status": "success",
-            "data": investigation.to_dict(),
-            "timestamp": datetime.now().isoformat()
-        })
+@app.route('/api/investigations', methods=['GET'])
+def list_investigations():
+    investigations = Investigation.query.order_by(Investigation.created_at.desc()).all()
+    return jsonify({
+        'status': 'success',
+        'data': [inv.to_dict() for inv in investigations]
+    })
+
+@app.route('/api/investigations', methods=['POST'])
+def create_investigation():
+    data = request.json
+    investigation = Investigation(
+        title=data['title'],
+        description=data.get('description'),
+        severity=data.get('severity', 'medium'),
+        status='active'
+    )
+    db.session.add(investigation)
+    db.session.commit()
+    return jsonify({
+        'status': 'success',
+        'data': investigation.to_dict()
+    })
+
+@app.route('/api/investigations/<int:id>/tools', methods=['GET'])
+def get_investigation_tools(id):
+    tools = ToolResult.query.filter_by(investigation_id=id).order_by(ToolResult.timestamp.desc()).all()
+    return jsonify({
+        'status': 'success',
+        'data': [tool.to_dict() for tool in tools]
+    })
 
 @app.route('/api/investigations/<int:investigation_id>', methods=['GET', 'PUT', 'DELETE'])
 def investigation(investigation_id):
@@ -340,11 +217,82 @@ def investigation_notes(investigation_id):
 
 @app.route('/api/security/fail2ban')
 def fail2ban_status():
-    return jsonify(get_fail2ban_status())
+    """Get fail2ban status and statistics"""
+    return jsonify(security_monitor.get_fail2ban_status())
 
 @app.route('/api/security/vpn')
 def vpn_status():
-    return jsonify(get_vpn_status())
+    """Get VPN connection status"""
+    return jsonify(security_monitor.get_vpn_status())
+
+@app.route('/api/security/banned-ips')
+def get_banned_ips():
+    """Get all banned IPs across all jails"""
+    jail = request.args.get('jail')
+    banned_ips = security_monitor.get_banned_ips(jail)
+    
+    # Create security events for banned IPs
+    for ip_info in banned_ips:
+        event = SecurityEvent(
+            event_type='fail2ban',
+            source_ip=ip_info['ip'],
+            details=ip_info,
+            severity='high',
+            status='new'
+        )
+        db.session.add(event)
+    
+    db.session.commit()
+    
+    return jsonify({
+        "status": "success",
+        "data": banned_ips,
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.route('/api/security/unban-ip', methods=['POST'])
+def unban_ip():
+    """Unban an IP address from fail2ban"""
+    data = request.json
+    ip = data.get('ip')
+    jail = data.get('jail')
+    
+    if not ip:
+        return jsonify({
+            "status": "error",
+            "message": "IP address is required",
+            "timestamp": datetime.now().isoformat()
+        }), 400
+    
+    success = security_monitor.unban_ip(ip, jail)
+    
+    if success:
+        # Log the unban action
+        event = SecurityEvent(
+            event_type='fail2ban',
+            source_ip=ip,
+            details={
+                'action': 'unban',
+                'jail': jail or 'all',
+                'success': True
+            },
+            severity='medium',
+            status='resolved'
+        )
+        db.session.add(event)
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Successfully unbanned IP {ip}",
+            "timestamp": datetime.now().isoformat()
+        })
+    else:
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to unban IP {ip}",
+            "timestamp": datetime.now().isoformat()
+        }), 500
 
 @app.route('/api/security/events', methods=['GET'])
 def security_events():

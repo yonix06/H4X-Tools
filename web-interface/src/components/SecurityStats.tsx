@@ -1,198 +1,219 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native-web';
 import { useTheme } from '../contexts/ThemeContext';
-import { SecurityEvent } from '../services/securityEvents';
+import { securityApi } from '../services/securityApi';
 
-interface SecurityStats {
-  total: number;
-  by_severity: Record<SecurityEvent['severity'], number>;
-  by_status: Record<SecurityEvent['status'], number>;
-  by_type: Record<string, number>;
+interface SecurityEvent {
+  id: number;
+  event_type: 'fail2ban' | 'vpn' | 'custom';
+  source_ip?: string;
+  timestamp: string;
+  details: any;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'new' | 'investigating' | 'resolved';
 }
 
 export const SecurityStats: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [stats, setStats] = useState<SecurityStats | null>(null);
+  const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSecurityEvents = async () => {
+    try {
+      const response = await securityApi.getSecurityEvents();
+      if (response.status === 'success') {
+        setEvents(response.data);
+      } else {
+        setError(response.message || 'Failed to fetch security events');
+      }
+    } catch (err) {
+      setError('Failed to fetch security events');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/security/events`);
-        const data = await response.json();
-        if (data.status === 'success' && Array.isArray(data.data)) {
-          const events = data.data as SecurityEvent[];
-          const stats: SecurityStats = {
-            total: events.length,
-            by_severity: {
-              critical: 0,
-              high: 0,
-              medium: 0,
-              low: 0
-            },
-            by_status: {
-              new: 0,
-              investigating: 0,
-              resolved: 0
-            },
-            by_type: {}
-          };
-
-          events.forEach(event => {
-            stats.by_severity[event.severity]++;
-            stats.by_status[event.status]++;
-            stats.by_type[event.event_type] = (stats.by_type[event.event_type] || 0) + 1;
-          });
-
-          setStats(stats);
-        }
-      } catch (error) {
-        console.error('Failed to fetch security stats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-    const interval = setInterval(fetchStats, 30000);
+    fetchSecurityEvents();
+    // Poll for new events every minute
+    const interval = setInterval(fetchSecurityEvents, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const StatBox: React.FC<{
-    label: string;
-    value: number;
-    color?: string;
-  }> = ({ label, value, color }) => (
-    <View style={{
-      backgroundColor: isDark ? '#374151' : '#e5e7eb',
-      padding: 12,
-      borderRadius: 6,
-      minWidth: 120
-    }}>
-      <Text style={{
-        color: color || (isDark ? '#d1d5db' : '#4b5563'),
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 4
-      }}>
-        {value}
-      </Text>
-      <Text style={{
-        color: isDark ? '#9ca3af' : '#6b7280',
-        fontSize: 12
-      }}>
-        {label}
-      </Text>
-    </View>
-  );
+  const getSeverityColor = (severity: SecurityEvent['severity']) => {
+    switch (severity) {
+      case 'critical':
+        return isDark ? '#ef4444' : '#dc2626';
+      case 'high':
+        return isDark ? '#f97316' : '#ea580c';
+      case 'medium':
+        return isDark ? '#eab308' : '#ca8a04';
+      case 'low':
+        return isDark ? '#22c55e' : '#16a34a';
+      default:
+        return isDark ? '#6b7280' : '#4b5563';
+    }
+  };
+
+  const getEventTypeIcon = (type: SecurityEvent['event_type']) => {
+    switch (type) {
+      case 'fail2ban':
+        return '🛡️';
+      case 'vpn':
+        return '🔒';
+      case 'custom':
+        return '⚡';
+      default:
+        return '📌';
+    }
+  };
 
   return (
     <View style={{
       backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
+      borderRadius: 8,
       padding: 16,
-      borderRadius: 6,
-      marginBottom: 24
+      marginBottom: 24,
     }}>
       <Text style={{
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         color: isDark ? '#10b981' : '#059669',
-        marginBottom: 16
+        marginBottom: 16,
       }}>
-        Security Overview
+        Security Monitoring
       </Text>
 
       {isLoading ? (
-        <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
-          Loading statistics...
+        <Text style={{
+          color: isDark ? '#d1d5db' : '#4b5563',
+          textAlign: 'center',
+          padding: 16,
+        }}>
+          Loading security events...
         </Text>
-      ) : stats ? (
-        <>
-          {/* Summary Stats */}
-          <View style={{
-            flexDirection: 'row',
-            gap: 12,
-            marginBottom: 16,
-            flexWrap: 'wrap'
-          }}>
-            <StatBox 
-              label="Total Events" 
-              value={stats.total}
-              color={isDark ? '#10b981' : '#059669'}
-            />
-            <StatBox 
-              label="New Events" 
-              value={stats.by_status.new}
-              color={isDark ? '#ef4444' : '#dc2626'}
-            />
-            <StatBox 
-              label="Investigating" 
-              value={stats.by_status.investigating}
-              color={isDark ? '#f59e0b' : '#d97706'}
-            />
-            <StatBox 
-              label="Resolved" 
-              value={stats.by_status.resolved}
-              color={isDark ? '#34d399' : '#059669'}
-            />
-          </View>
-
-          {/* Severity Breakdown */}
-          <Text style={{
-            color: isDark ? '#d1d5db' : '#4b5563',
-            fontWeight: 'bold',
-            marginBottom: 8
-          }}>
-            By Severity
-          </Text>
-          <View style={{
-            flexDirection: 'row',
-            gap: 12,
-            marginBottom: 16,
-            flexWrap: 'wrap'
-          }}>
-            {Object.entries(stats.by_severity).map(([severity, count]) => (
-              <StatBox
-                key={severity}
-                label={severity.toUpperCase()}
-                value={count}
-                color={
-                  severity === 'critical' ? (isDark ? '#ef4444' : '#dc2626') :
-                  severity === 'high' ? (isDark ? '#f97316' : '#ea580c') :
-                  severity === 'medium' ? (isDark ? '#f59e0b' : '#d97706') :
-                  (isDark ? '#10b981' : '#059669')
-                }
-              />
-            ))}
-          </View>
-
-          {/* Event Type Breakdown */}
-          <Text style={{
-            color: isDark ? '#d1d5db' : '#4b5563',
-            fontWeight: 'bold',
-            marginBottom: 8
-          }}>
-            By Type
-          </Text>
-          <View style={{
-            flexDirection: 'row',
-            gap: 12,
-            flexWrap: 'wrap'
-          }}>
-            {Object.entries(stats.by_type).map(([type, count]) => (
-              <StatBox
-                key={type}
-                label={type.toUpperCase()}
-                value={count}
-              />
-            ))}
-          </View>
-        </>
+      ) : error ? (
+        <Text style={{
+          color: isDark ? '#ef4444' : '#dc2626',
+          textAlign: 'center',
+          padding: 16,
+        }}>
+          {error}
+        </Text>
       ) : (
-        <Text style={{ color: isDark ? '#ef4444' : '#dc2626' }}>
-          Failed to load security statistics
-        </Text>
+        <View>
+          {/* Event Timeline */}
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{
+              color: isDark ? '#d1d5db' : '#4b5563',
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginBottom: 12,
+            }}>
+              Recent Events
+            </Text>
+            {events.length === 0 ? (
+              <Text style={{
+                color: isDark ? '#9ca3af' : '#6b7280',
+                textAlign: 'center',
+                padding: 16,
+              }}>
+                No recent security events
+              </Text>
+            ) : (
+              events.map(event => (
+                <View
+                  key={event.id}
+                  style={{
+                    backgroundColor: isDark ? '#374151' : '#e5e7eb',
+                    borderRadius: 6,
+                    padding: 12,
+                    marginBottom: 8,
+                    borderLeftWidth: 4,
+                    borderLeftColor: getSeverityColor(event.severity),
+                  }}
+                >
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 8,
+                  }}>
+                    <Text style={{ marginRight: 8 }}>
+                      {getEventTypeIcon(event.event_type)}
+                    </Text>
+                    <Text style={{
+                      color: isDark ? '#e5e7eb' : '#1f2937',
+                      fontWeight: 'bold',
+                      flex: 1,
+                    }}>
+                      {event.event_type.toUpperCase()}
+                    </Text>
+                    <Text style={{
+                      color: isDark ? '#9ca3af' : '#6b7280',
+                      fontSize: 12,
+                    }}>
+                      {new Date(event.timestamp).toLocaleString()}
+                    </Text>
+                  </View>
+
+                  {event.source_ip && (
+                    <Text style={{
+                      color: isDark ? '#d1d5db' : '#4b5563',
+                      marginBottom: 4,
+                    }}>
+                      Source IP: {event.source_ip}
+                    </Text>
+                  )}
+
+                  <Text style={{
+                    color: isDark ? '#9ca3af' : '#6b7280',
+                    fontSize: 14,
+                  }}>
+                    {typeof event.details === 'string' 
+                      ? event.details 
+                      : JSON.stringify(event.details, null, 2)}
+                  </Text>
+
+                  <View style={{
+                    flexDirection: 'row',
+                    marginTop: 8,
+                    gap: 8,
+                  }}>
+                    <View style={{
+                      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
+                      paddingVertical: 2,
+                      paddingHorizontal: 8,
+                      borderRadius: 12,
+                    }}>
+                      <Text style={{
+                        color: getSeverityColor(event.severity),
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                      }}>
+                        {event.severity.toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{
+                      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
+                      paddingVertical: 2,
+                      paddingHorizontal: 8,
+                      borderRadius: 12,
+                    }}>
+                      <Text style={{
+                        color: isDark ? '#d1d5db' : '#4b5563',
+                        fontSize: 12,
+                      }}>
+                        {event.status}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
       )}
     </View>
   );

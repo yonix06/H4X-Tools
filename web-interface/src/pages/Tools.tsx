@@ -1,396 +1,340 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native-web';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native-web';
 import { useTheme } from '../contexts/ThemeContext';
-import { useHistory } from '../contexts/HistoryContext';
-import { HistoryPanel } from '../components/HistoryPanel';
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import apiService, { ApiResponse } from '../services/api';
-import { Tool } from '../services/types';
-
-// Définition des catégories
-const CATEGORIES = {
-  OSINT: 'OSINT & Reconnaissance',
-  NETWORK: 'Network Tools',
-  CRYPTO: 'Cryptography',
-  GENERATOR: 'Generators',
-  MISC: 'Miscellaneous'
-} as const;
-
-type CategoryKey = keyof typeof CATEGORIES;
+import { CategoryKey, CATEGORIES, TOOLS, Tool } from '../config/toolCategories';
+import { securityApi } from '../services/securityApi';
 
 const Tools: React.FC = () => {
   const { theme } = useTheme();
-  const { addToHistory } = useHistory();
   const isDark = theme === 'dark';
-
-  // État pour la recherche
+  const [activeCategory, setActiveCategory] = useState<CategoryKey | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Liste des outils disponibles avec leurs catégories
-  const [tools, setTools] = useState<(Tool & { category: CategoryKey })[]>([
-    // ...existing tools array...
-  ]);
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [toolInputs, setToolInputs] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // État actuel de l'application
-  const [selectedTool, setSelectedTool] = useState<(Tool & { category: CategoryKey }) | null>(null);
-  const [toolsOutput, setToolsOutput] = useState<{ [key: string]: ApiResponse<unknown> }>({});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const filteredTools = TOOLS.filter(tool => {
+    const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
+    const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         tool.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  // Filtrer et grouper les outils par catégorie
-  const groupedTools = useMemo(() => {
-    const filtered = tools.filter(tool => 
-      tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    return Object.entries(CATEGORIES).reduce((acc, [category]) => {
-      acc[category as CategoryKey] = filtered.filter(tool => tool.category === category);
-      return acc;
-    }, {} as Record<CategoryKey, typeof tools>);
-  }, [tools, searchQuery]);
-
-  const handleInputChange = (toolId: string, inputName: string, value: string) => {
-    setTools(prevTools => 
-      prevTools.map(tool => 
-        tool.id === toolId
-          ? {
-              ...tool,
-              inputs: tool.inputs.map(input =>
-                input.name === inputName ? { ...input, value } : input
-              )
-            }
-          : tool
-      )
-    );
+  const handleToolSelect = (tool: Tool) => {
+    setSelectedTool(tool);
+    setToolInputs({});
+    setResult(null);
+    setError(null);
   };
 
-  const handleHistorySelect = (toolId: string, params: Record<string, string>) => {
-    const selectedTool = tools.find(t => t.id === toolId);
-    if (selectedTool) {
-      setSelectedTool(selectedTool);
-      setTools(prevTools => 
-        prevTools.map(tool => 
-          tool.id === toolId
-            ? {
-                ...tool,
-                inputs: tool.inputs.map(input => ({
-                  ...input,
-                  value: params[input.name] || ''
-                }))
-              }
-            : tool
-        )
-      );
+  const handleInputChange = (name: string, value: string) => {
+    setToolInputs(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const executeTool = async () => {
+    if (!selectedTool) return;
+
+    // Validate required inputs
+    const missingInputs = selectedTool.inputs
+      .filter(input => input.required && !toolInputs[input.name]);
+    
+    if (missingInputs.length > 0) {
+      setError(`Missing required fields: ${missingInputs.map(i => i.name).join(', ')}`);
+      return;
     }
-  };
-
-  const executeTool = async (tool: Tool & { category: CategoryKey }) => {
-    if (!tool || isLoading) return;
 
     setIsLoading(true);
-    
+    setError(null);
     try {
-      const inputs = tool.inputs.reduce((acc, input) => ({
-        ...acc,
-        [input.name]: input.value
-      }), {});
-
-      const response = await apiService.executeTool(tool.id, inputs);
-      
-      setToolsOutput(prev => ({
-        ...prev,
-        [tool.id]: response
-      }));
-
+      const response = await securityApi.executeTool(selectedTool.id, toolInputs);
       if (response.status === 'success') {
-        addToHistory({
-          tool,
-          params: inputs,
-          timestamp: new Date().toISOString(),
-          response
-        });
+        setResult(response.data);
+      } else {
+        setError(response.message || 'Tool execution failed');
       }
     } catch (err) {
-      setToolsOutput(prev => ({
-        ...prev,
-        [tool.id]: {
-          status: 'error',
-          message: err instanceof Error ? err.message : 'An error occurred',
-          timestamp: new Date().toISOString()
-        }
-      }));
+      setError('Failed to execute tool');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatOutput = (output: any): string => {
-    if (typeof output === 'string') return output;
-    try {
-      return JSON.stringify(output, null, 2);
-    } catch {
-      return String(output);
-    }
-  };
-
   return (
-    <View style={{ flex: 1, flexDirection: 'row', overflow: 'hidden' }}>
-      {isLoading && <LoadingSpinner message={`Running ${selectedTool?.name || 'tool'}...`} />}
-
-      {/* Sidebar - Tool List */}
+    <View style={{ flex: 1 }}>
+      {/* Header */}
       <View style={{ 
-        width: '25%',
         backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
         padding: 16,
-        overflow: 'auto'
       }}>
         <Text style={{ 
-          fontSize: 18,
+          fontSize: 24,
           fontWeight: 'bold',
-          marginBottom: 16,
           color: isDark ? '#10b981' : '#059669'
         }}>
-          Available Tools
+          Security Tools
         </Text>
         
-        {/* Search Bar */}
-        <View style={{ marginBottom: 16 }}>
-          <TextInput
-            style={{
-              backgroundColor: isDark ? '#374151' : '#e5e7eb',
-              padding: 12,
-              borderRadius: 6,
-              color: isDark ? '#ffffff' : '#111827',
-              width: '100%'
-            }}
-            placeholder="Search tools..."
-            placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
+        {/* Search */}
+        <TextInput
+          style={{
+            backgroundColor: isDark ? '#374151' : '#ffffff',
+            color: isDark ? '#e5e7eb' : '#1f2937',
+            padding: 8,
+            borderRadius: 6,
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: isDark ? '#4b5563' : '#d1d5db',
+          }}
+          placeholder="Search tools..."
+          placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.nativeEvent.text)}
+        />
 
-        {/* Tools List by Category */}
-        <ScrollView style={{ height: '100%' }}>
-          {Object.entries(groupedTools).map(([category, categoryTools]) => (
-            categoryTools.length > 0 && (
-              <View key={category} style={{ marginBottom: 16 }}>
-                <Text style={{ 
-                  color: isDark ? '#10b981' : '#059669',
-                  fontWeight: 'bold',
-                  marginBottom: 8,
-                  fontSize: 16
-                }}>
-                  {CATEGORIES[category as keyof typeof CATEGORIES]}
-                </Text>
-                {categoryTools.map((tool) => (
-                  <TouchableOpacity
-                    key={tool.id}
-                    style={{
-                      padding: 12,
-                      marginBottom: 8,
-                      borderRadius: 6,
-                      backgroundColor: selectedTool?.id === tool.id
-                        ? (isDark ? '#047857' : '#d1fae5')
-                        : (isDark ? '#374151' : '#e5e7eb')
-                    }}
-                    onPress={() => setSelectedTool(tool)}
-                  >
-                    <Text style={{ 
-                      fontWeight: 'bold',
-                      color: isDark ? '#ffffff' : '#111827'
-                    }}>
-                      {tool.name}
-                    </Text>
-                    <Text style={{ 
-                      fontSize: 14,
-                      color: isDark ? '#d1d5db' : '#4b5563',
-                      marginTop: 4
-                    }}>
-                      {tool.description}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )
+        {/* Category Filter */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: 12 }}
+        >
+          <TouchableOpacity
+            onPress={() => setActiveCategory('all')}
+            style={{
+              backgroundColor: activeCategory === 'all' 
+                ? (isDark ? '#10b981' : '#059669')
+                : (isDark ? '#374151' : '#e5e7eb'),
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: 16,
+              marginRight: 8,
+            }}
+          >
+            <Text style={{
+              color: activeCategory === 'all'
+                ? '#ffffff'
+                : (isDark ? '#d1d5db' : '#4b5563'),
+            }}>
+              All
+            </Text>
+          </TouchableOpacity>
+          
+          {Object.entries(CATEGORIES).map(([key, category]) => (
+            <TouchableOpacity
+              key={key}
+              onPress={() => setActiveCategory(key as CategoryKey)}
+              style={{
+                backgroundColor: activeCategory === key
+                  ? (isDark ? '#10b981' : '#059669')
+                  : (isDark ? '#374151' : '#e5e7eb'),
+                paddingVertical: 6,
+                paddingHorizontal: 12,
+                borderRadius: 16,
+                marginRight: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              {category.icon && (
+                <Text style={{ marginRight: 4 }}>{category.icon}</Text>
+              )}
+              <Text style={{
+                color: activeCategory === key
+                  ? '#ffffff'
+                  : (isDark ? '#d1d5db' : '#4b5563'),
+              }}>
+                {category.name}
+              </Text>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
-      {/* Main Area - Tool Interface */}
-      <View style={{ flex: 1, padding: 24, overflow: 'auto' }}>
-        {selectedTool ? (
-          <View>
-            <Text style={{ 
-              fontSize: 24,
-              fontWeight: 'bold',
-              color: isDark ? '#10b981' : '#059669',
-              marginBottom: 8
-            }}>
-              {selectedTool.name}
-            </Text>
-            <Text style={{ 
-              color: isDark ? '#9ca3af' : '#6b7280',
-              marginBottom: 24
-            }}>
-              {selectedTool.description}
-            </Text>
+      {/* Main Content */}
+      <ScrollView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f9fafb' }}>
+        <View style={{ padding: 16, maxWidth: 1200, marginHorizontal: 'auto', width: '100%' }}></View>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            {/* Tool List */}
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: isDark ? '#d1d5db' : '#4b5563',
+                marginBottom: 12,
+              }}>
+                Available Tools
+              </Text>
 
-            {/* History Panel */}
-            <HistoryPanel onSelectFromHistory={handleHistorySelect} />
-
-            {/* Tool Inputs */}
-            <View style={{ 
-              backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-              padding: 16,
-              borderRadius: 6,
-              marginBottom: 24
-            }}>
-              {selectedTool.inputs.length > 0 ? (
-                selectedTool.inputs.map((input) => (
-                  <View key={input.name} style={{ marginBottom: 16 }}>
-                    <Text style={{ 
-                      color: isDark ? '#ffffff' : '#111827',
-                      marginBottom: 4
+              {filteredTools.map(tool => (
+                <TouchableOpacity
+                  key={tool.id}
+                  onPress={() => handleToolSelect(tool)}
+                  style={{
+                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 8,
+                    borderWidth: 1,
+                    borderColor: selectedTool?.id === tool.id
+                      ? (isDark ? '#10b981' : '#059669')
+                      : (isDark ? '#374151' : '#e5e7eb'),
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    color: isDark ? '#e5e7eb' : '#1f2937',
+                    marginBottom: 4,
+                  }}>
+                    {CATEGORIES[tool.category].icon} {tool.name}
+                  </Text>
+                  <Text style={{
+                    color: isDark ? '#9ca3af' : '#6b7280',
+                    marginBottom: 8,
+                  }}>
+                    {tool.description}
+                  </Text>
+                  <View style={{
+                    flexDirection: 'row',
+                    gap: 8,
+                  }}>
+                    <View style={{
+                      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+                      paddingVertical: 2,
+                      paddingHorizontal: 8,
+                      borderRadius: 12,
                     }}>
-                      {input.name.replace('_', ' ').toUpperCase()}
-                    </Text>
-                    <TextInput
-                      style={{
-                        backgroundColor: isDark ? '#374151' : '#e5e7eb',
-                        padding: 12,
-                        borderRadius: 6,
-                        color: isDark ? '#ffffff' : '#111827',
-                        width: '100%'
-                      }}
-                      placeholder={input.placeholder}
-                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                      value={input.value}
-                      onChangeText={(text: string) => handleInputChange(selectedTool.id, input.name, text)}
-                      secureTextEntry={input.type === 'password'}
-                      keyboardType={input.type === 'number' ? 'numeric' : 'default'}
-                    />
+                      <Text style={{
+                        color: isDark ? '#10b981' : '#059669',
+                        fontSize: 12,
+                      }}></Text>
+                        {CATEGORIES[tool.category].name}
+                      </Text>
+                    </View>
+                    <View style={{
+                      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+                      paddingVertical: 2,
+                      paddingHorizontal: 8,
+                      borderRadius: 12,
+                    }}>
+                      <Text style={{
+                        color: isDark ? '#d1d5db' : '#4b5563',
+                        fontSize: 12,
+                      }}>
+                        {tool.function}
+                      </Text>
+                    </View>
                   </View>
-                ))
-              ) : (
-                <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>
-                  This tool doesn't require any inputs.
-                </Text>
-              )}
-
-              <TouchableOpacity
-                style={{
-                  padding: 12,
-                  borderRadius: 6,
-                  marginTop: 16,
-                  backgroundColor: isLoading
-                    ? (isDark ? '#4b5563' : '#e5e7eb')
-                    : (isDark ? '#10b981' : '#059669'),
-                  alignItems: 'center'
-                }}
-                onPress={() => executeTool(selectedTool)}
-                disabled={isLoading}
-              >
-                <Text style={{ 
-                  color: isDark ? '#ffffff' : '#ffffff',
-                  fontWeight: 'bold'
-                }}>
-                  {isLoading ? 'Running...' : 'Execute Tool'}
-                </Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
             </View>
 
-            {/* Tool Output */}
-            {toolsOutput[selectedTool?.id ?? ''] && (
-              <View style={{ 
-                backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-                padding: 16,
-                borderRadius: 6
-              }}>
-                <Text style={{ 
+            {/* Tool Input Form */}
+            {selectedTool && (
+              <View style={{ flex: 1 }}>
+                <Text style={{
                   fontSize: 18,
                   fontWeight: 'bold',
-                  color: isDark ? '#10b981' : '#059669',
-                  marginBottom: 8
+                  color: isDark ? '#d1d5db' : '#4b5563',
+                  marginBottom: 12,
                 }}>
-                  Output
+                  {selectedTool.name}
                 </Text>
-                <View style={{ 
-                  backgroundColor: isDark ? '#000000' : '#ffffff',
+
+                <View style={{
+                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                  borderRadius: 8,
                   padding: 16,
-                  borderRadius: 6
-                }}>
-                  <ScrollView style={{ maxHeight: 400 }}>
-                    <Text style={{ 
-                      color: isDark ? '#34d399' : '#059669',
+                  marginBottom: 16,
+                }}></View>
+                  {selectedTool.inputs.map(input => (
+                    <View key={input.name} style={{ marginBottom: 12 }}>
+                      <Text style={{
+                        color: isDark ? '#d1d5db' : '#4b5563',
+                        marginBottom: 4,
+                      }}>
+                        {input.name} {input.required && '*'}
+                      </Text>
+                      <TextInput
+                        style={{
+                          backgroundColor: isDark ? '#374151' : '#f3f4f6',
+                          color: isDark ? '#e5e7eb' : '#1f2937',
+                          padding: 8,
+                          borderRadius: 6,
+                          borderWidth: 1,
+                          borderColor: isDark ? '#4b5563' : '#d1d5db',
+                        }}
+                        placeholder={input.placeholder}
+                        placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+                        value={toolInputs[input.name] || ''}
+                        onChange={e => handleInputChange(input.name, e.nativeEvent.text)}
+                        secureTextEntry={input.type === 'password'}
+                      />
+                    </View>
+                  ))}
+
+                  <TouchableOpacity
+                    onPress={executeTool}
+                    disabled={isLoading}
+                    style={{
+                      backgroundColor: isDark ? '#10b981' : '#059669',
+                      padding: 12,
+                      borderRadius: 6,
+                      opacity: isLoading ? 0.7 : 1,
+                    }}
+                  >
+                    <Text style={{
+                      color: '#ffffff',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                    }}></Text>
+                      {isLoading ? 'Running...' : 'Run Tool'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {error && (
+                    <Text style={{
+                      color: isDark ? '#ef4444' : '#dc2626',
+                      marginTop: 8,
+                    }}></Text>
+                      {error}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Results */}
+                {result && (
+                  <View style={{
+                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                    borderRadius: 8,
+                    padding: 16,
+                  }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: isDark ? '#d1d5db' : '#4b5563',
+                      marginBottom: 8,
+                    }}>
+                      Results
+                    </Text>
+                    <Text style={{
+                      color: isDark ? '#e5e7eb' : '#1f2937',
                       fontFamily: 'monospace',
-                      whiteSpace: 'pre-wrap'
+                      whiteSpace: 'pre-wrap',
                     }}>
-                      {formatOutput(
-                        toolsOutput[selectedTool?.id ?? ''].data ||
-                        toolsOutput[selectedTool?.id ?? ''].message
-                      )}
+                      {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
                     </Text>
-                  </ScrollView>
-                </View>
-                <View style={{ 
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 8
-                }}>
-                  <Text style={{ 
-                    color: isDark ? '#9ca3af' : '#6b7280',
-                    fontSize: 14
-                  }}>
-                    Status:{' '}
-                    <Text style={{ 
-                      color: toolsOutput[selectedTool?.id ?? ''].status === 'success'
-                        ? (isDark ? '#34d399' : '#059669')
-                        : (isDark ? '#ef4444' : '#dc2626')
-                    }}>
-                      {toolsOutput[selectedTool?.id ?? ''].status}
-                    </Text>
-                  </Text>
-                  <Text style={{ 
-                    color: isDark ? '#9ca3af' : '#6b7280',
-                    fontSize: 14
-                  }}>
-                    Timestamp: {toolsOutput[selectedTool?.id ?? ''].timestamp}
-                  </Text>
-                </View>
+                  </View>
+                )}
               </View>
             )}
           </View>
-        ) : (
-          <View style={{ 
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Text style={{ 
-              fontSize: 24,
-              color: isDark ? '#9ca3af' : '#6b7280',
-              marginBottom: 16
-            }}>
-              Welcome to H4X-Tools Web Interface
-            </Text>
-            <Text style={{ 
-              color: isDark ? '#6b7280' : '#9ca3af',
-              textAlign: 'center',
-              maxWidth: 512,
-              marginBottom: 32
-            }}>
-              Select a tool from the sidebar to get started. This interface provides access to all the functionality of the H4X-Tools toolkit.
-            </Text>
-            <Text style={{ 
-              color: isDark ? '#10b981' : '#059669',
-              fontWeight: 'bold'
-            }}>
-              ⚠️ FOR EDUCATIONAL PURPOSES ONLY ⚠️
-            </Text>
-          </View>
-        )}
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
