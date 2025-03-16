@@ -1,5 +1,5 @@
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import whoisdomain, time
 from helper import printer, timer
@@ -31,7 +31,6 @@ class Lookup:
         try:
             q = whoisdomain.query(domain)
             printer.info(f"Trying to find the information of {Style.BRIGHT}{domain}{Style.RESET_ALL}...")
-            time.sleep(1)
             for key in q.__dict__:
                 printer.success(key, "-", q.__dict__[key])
         except Exception as e:

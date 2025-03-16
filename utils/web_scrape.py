@@ -1,6 +1,6 @@
 
 """
- Copyright (c) 2024. Vili and contributors.
+ Copyright (c) 2023-2025. Vili and contributors.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- """
+"""
 
 import asyncio, aiohttp, time
 from bs4 import BeautifulSoup
@@ -40,7 +40,6 @@ class Scrape:
                 printer.info(f"Trying to scrape links from {Style.BRIGHT}{self.url}{Style.RESET_ALL} and its linked pages as well...")
                 printer.warning("This may take a while depending on the sizes of the sites.")
 
-                time.sleep(0.5)
                 asyncio.run(self.scrape_links(self.url, recursive=True))
                 printer.success(f"Scraping linked pages completed..!")
             else:
