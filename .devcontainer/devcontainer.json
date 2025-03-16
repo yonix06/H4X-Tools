@@ -16,6 +16,49 @@
 		"ghcr.io/devcontainers-extra/features/gitsign-credential-cache:1": {},
 		"ghcr.io/devcontainers-extra/features/vscode-cli:1": {},
 		"ghcr.io/devcontainers-extra/features/vscode-server:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.autopep8",
+				"dbaeumer.vscode-eslint",
+				"ms-python.vscode-pylance",
+				"ms-python.python",
+				"ms-python.debugpy",
+				"GitHub.vscode-pull-request-github",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-vscode.vscode-websearchforcopilot",
+				"ms-vscode.vscode-copilot-vision",
+				"redhat.vscode-yaml",
+				"qcz.text-power-tools",
+				"spmeesseman.vscode-taskexplorer",
+				"alfredbirk.tailwind-documentation",
+				"bradlc.vscode-tailwindcss",
+				"jock.svg",
+				"timonwong.shellcheck",
+				"esbenp.prettier-vscode",
+				"elagil.pre-commit-helper",
+				"csstools.postcss",
+				"VisualStudioExptTeam.vscodeintellicode-completions",
+				"VisualStudioExptTeam.intellicode-api-usage-examples",
+				"VisualStudioExptTeam.vscodeintellicode",
+				"github.copilot-workspace",
+				"me-dutour-mathieu.vscode-github-actions",
+				"shyykoserhiy.git-autoconfig",
+				"howardzuo.vscode-git-tags",
+				"donjayamanne.githistory",
+				"mhutchie.git-graph",
+				"ms-vscode.vscode-js-profile-flame",
+				"ms-python.flake8",
+				"PeterSchmalfeldt.explorer-exclude",
+				"EditorConfig.EditorConfig",
+				"mikestead.dotenv",
+				"vivaxy.vscode-conventional-commits",
+				"maciejdems.add-to-gitignore",
+				"ms-windows-ai-studio.windows-ai-studio"
+			]
+		}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
