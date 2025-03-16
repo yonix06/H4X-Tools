@@ -4,13 +4,14 @@ import sys
 import json
 import subprocess
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import importlib.util
-from models.database import init_db, db
+from models.database import db
 from models.models import ToolResult, Investigation, InvestigationNote, SecurityEvent
 from utils.security_monitor import SecurityMonitor
+from app import app
 
 # Load environment variables
 load_dotenv()
@@ -24,13 +25,23 @@ print(f"Adding to Python path: {root_dir}")
 available_tools = {}
 
 def import_tool(module_name, tool_id=None):
+    """Import a tool module dynamically"""
     try:
-        module = importlib.import_module(f'utils.{module_name}')
-        available_tools[tool_id or module_name] = True
+        spec = importlib.util.spec_from_file_location(
+            module_name, 
+            os.path.join(root_dir, 'utils', f'{module_name}.py')
+        )
+        if spec is None or spec.loader is None:
+            print(f"Failed to load spec for {module_name}")
+            return None
+            
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        available_tools[tool_id or module_name] = {'status': 'available', 'module': module}
         return module
-    except ImportError as e:
-        print(f"Warning: Could not import {module_name}: {e}")
-        available_tools[tool_id or module_name] = False
+    except Exception as e:
+        print(f"Error importing {module_name}: {e}")
+        available_tools[tool_id or module_name] = {'status': 'error', 'error': str(e)}
         return None
 
 # Import tools with error handling
@@ -45,33 +56,25 @@ tools = {
     'email_search': import_tool('email_search', 'email_search'),
     'webhook_spammer': import_tool('webhook_spammer', 'webhook_spammer'),
     'whois_lookup': import_tool('whois_lookup', 'whois_lookup'),
-    'sms_bomber': import_tool('smsbomber', 'sms_bomber'),
-    'fake_info_generator': import_tool('fake_info_generator', 'fake_info_generator'),
+    'fake_info': import_tool('fake_info_generator', 'fake_info'),
     'web_scrape': import_tool('web_scrape', 'web_scrape'),
     'wifi_finder': import_tool('wifi_finder', 'wifi_finder'),
     'wifi_vault': import_tool('wifi_vault', 'wifi_vault'),
-    'dir_buster': import_tool('dirbuster', 'dir_buster'),
+    'dirbuster': import_tool('dirbuster', 'dirbuster'),
     'local_user_enum': import_tool('local_user_enum', 'local_user_enum'),
     'caesar_cipher': import_tool('caesar_cipher', 'caesar_cipher'),
     'basexx': import_tool('basexx', 'basexx')
 }
-
-app = Flask(__name__)
-CORS(app)
-
-# Initialize database
-init_db(app)
 
 # Initialize security monitor
 security_monitor = SecurityMonitor()
 
 @app.route('/')
 def index():
+    """Root endpoint returns available tools"""
     return jsonify({
-        "status": "success",
-        "message": "H4X-Tools API is running",
-        "version": "1.0.0",
-        "available_tools": available_tools
+        'status': 'ok',
+        'tools': [{'id': k, 'status': v['status']} for k, v in available_tools.items()]
     })
 
 @app.route('/api/tools/<tool_id>', methods=['POST'])
@@ -304,9 +307,4 @@ def security_events():
     })
 
 if __name__ == '__main__':
-    print(f"Starting Flask server...")
-    print(f"Available tools: {available_tools}")
-    print(f"Python path: {sys.path}")
-    print(f"Current directory: {os.getcwd()}")
-    print(f"Root directory: {root_dir}")
     app.run(host='0.0.0.0', port=5000, debug=True)

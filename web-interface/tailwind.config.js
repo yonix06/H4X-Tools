@@ -3,27 +3,29 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        'hacker-green': '#10b981',
-        'terminal-black': '#282c34',
+        'hacker-green': {
+          DEFAULT: '#10b981',
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+        },
         'dark-gray': {
+          700: '#374151',
           800: '#1f2937',
           900: '#111827',
         },
-      },
-      fontFamily: {
-        mono: ['Courier New', 'monospace'],
-        sans: [
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'sans-serif',
-        ],
+        'terminal-black': '#282c34',
       },
       spacing: {
         '400': '400px',
@@ -38,11 +40,15 @@ module.exports = {
           '100%': { opacity: '1' },
         },
       },
+      maxWidth: {
+        '8xl': '88rem',
+      },
     },
   },
-  plugins: [],
-  corePlugins: {
-    preflight: true,
-  },
+  plugins: [
+    require('@tailwindcss/forms')({
+      strategy: 'class',
+    }),
+  ],
 }
 

@@ -16,5 +16,16 @@ module.exports = function override(config, env) {
     ...config.resolve.extensions,
   ];
 
+  // Add postcss loader for Tailwind
+  const oneOf = config.module.rules.find(rule => rule.oneOf);
+  if (oneOf) {
+    const cssRule = oneOf.oneOf.find(rule => 
+      rule.test && rule.test.toString().includes('css')
+    );
+    if (cssRule) {
+      cssRule.use = ['style-loader', 'css-loader', 'postcss-loader'];
+    }
+  }
+
   return config;
 };

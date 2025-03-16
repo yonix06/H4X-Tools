@@ -55,125 +55,72 @@ const Investigation: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex flex-col flex-1">
       {/* Header */}
-      <View style={{ 
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <Text style={{ 
-          fontSize: 24,
-          fontWeight: 'bold',
-          color: isDark ? '#10b981' : '#059669'
-        }}>
+      <View className="flex flex-row items-center justify-between bg-dark-gray-800 p-4">
+        <Text className="text-2xl font-bold text-hacker-green">
           Security Investigation
         </Text>
       </View>
 
       {/* Main Content */}
-      <ScrollView style={{ flex: 1 }}>
-        <View style={{ padding: 24 }}>
-          {/* Active Investigations */}
-          <View style={{
-            backgroundColor: isDark ? '#1f2937' : '#ffffff',
-            borderRadius: 8,
-            padding: 16,
-            marginBottom: 24,
-          }}>
-            <Text style={{
-              fontSize: 18,
-              fontWeight: 'bold',
-              color: isDark ? '#10b981' : '#059669',
-              marginBottom: 16,
-            }}>
-              Active Investigations
-            </Text>
+      <View className="flex-1">
+        <ScrollView className="p-6">
+          <View className="p-6">
+            {/* Active Investigations */}
+            <View className="bg-dark-gray-800 rounded-lg p-4 mb-6">
+              <Text className="text-xl font-bold text-hacker-green mb-4">
+                Active Investigations
+              </Text>
 
-            {investigations
-              .filter(inv => inv.status === 'active')
-              .map(investigation => (
-                <View 
-                  key={investigation.id}
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#f3f4f6',
-                    borderRadius: 6,
-                    padding: 12,
-                    marginBottom: 8,
-                    borderLeftWidth: 4,
-                    borderLeftColor: getSeverityColor(investigation.severity, isDark),
-                  }}
-                >
-                  <Text style={{
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    color: isDark ? '#e5e7eb' : '#1f2937',
-                    marginBottom: 4,
-                  }}>
-                    {investigation.title}
-                  </Text>
-                  
-                  {investigation.description && (
-                    <Text style={{
-                      color: isDark ? '#9ca3af' : '#6b7280',
-                      marginBottom: 8,
-                    }}>
-                      {investigation.description}
+              {investigations
+                .filter(inv => inv.status === 'active')
+                .map(investigation => (
+                  <View 
+                    key={investigation.id}
+                    className={`bg-dark-gray-900 rounded-md p-3 mb-2 border-l-4 ${
+                      investigation.severity === 'critical' ? 'border-red-500' :
+                      investigation.severity === 'high' ? 'border-orange-500' :
+                      investigation.severity === 'medium' ? 'border-yellow-500' :
+                      'border-blue-500'
+                    }`}
+                  >
+                    <Text className="text-base font-bold text-gray-200 mb-1">
+                      {investigation.title}
                     </Text>
-                  )}
+                    
+                    {investigation.description && (
+                      <Text className="text-gray-400 mb-2">
+                        {investigation.description}
+                      </Text>
+                    )}
 
-                  <View style={{
-                    flexDirection: 'row',
-                    gap: 8,
-                  }}>
-                    <View style={{
-                      backgroundColor: isDark ? '#1f2937' : '#e5e7eb',
-                      paddingVertical: 2,
-                      paddingHorizontal: 8,
-                      borderRadius: 12,
-                    }}>
-                      <Text style={{
-                        color: getSeverityColor(investigation.severity, isDark),
-                        fontSize: 12,
-                        fontWeight: 'bold',
-                      }}>
-                        {investigation.severity.toUpperCase()}
+                    <View className="flex flex-row gap-2">
+                      <View className="bg-dark-gray-800 py-1 px-2 rounded-full">
+                        <Text className={`text-xs font-bold ${
+                          investigation.severity === 'critical' ? 'text-red-500' :
+                          investigation.severity === 'high' ? 'text-orange-500' :
+                          investigation.severity === 'medium' ? 'text-yellow-500' :
+                          'text-blue-500'
+                        }`}>
+                          {investigation.severity.toUpperCase()}
+                        </Text>
+                      </View>
+                      <Text className="text-gray-400 text-xs">
+                        Created: {new Date(investigation.created_at).toLocaleString()}
                       </Text>
                     </View>
-                    <Text style={{
-                      color: isDark ? '#9ca3af' : '#6b7280',
-                      fontSize: 12,
-                    }}>
-                      Created: {new Date(investigation.created_at).toLocaleString()}
-                    </Text>
                   </View>
-                </View>
-              ))}
-          </View>
+                ))}
+            </View>
 
-          {/* Security Stats and Events */}
-          <SecurityStats />
-        </View>
-      </ScrollView>
+            {/* Security Stats and Events */}
+            <SecurityStats />
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
-};
-
-const getSeverityColor = (severity: Investigation['severity'], isDark: boolean) => {
-  switch (severity) {
-    case 'critical':
-      return isDark ? '#ef4444' : '#dc2626';
-    case 'high':
-      return isDark ? '#f97316' : '#ea580c';
-    case 'medium':
-      return isDark ? '#eab308' : '#ca8a04';
-    case 'low':
-      return isDark ? '#22c55e' : '#16a34a';
-    default:
-      return isDark ? '#6b7280' : '#4b5563';
-  }
 };
 
 export default Investigation;

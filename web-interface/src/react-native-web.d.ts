@@ -1,3 +1,5 @@
+import 'react-native-web';
+
 declare module 'react-native-web' {
   import { ComponentType } from 'react';
 
@@ -25,6 +27,9 @@ declare module 'react-native-web' {
     className?: string;
     style?: any;
     children?: React.ReactNode;
+    horizontal?: boolean;
+    showsHorizontalScrollIndicator?: boolean;
+    contentContainerStyle?: any;
   }
 
   export interface TextInputProps {
@@ -34,6 +39,7 @@ declare module 'react-native-web' {
     placeholderTextColor?: string;
     value?: string;
     onChangeText?: (text: string) => void;
+    onChange?: (e: { nativeEvent: { text: string } }) => void;
     secureTextEntry?: boolean;
     keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
     multiline?: boolean;

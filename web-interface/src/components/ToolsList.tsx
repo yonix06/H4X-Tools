@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity } from 'react-native-web';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native-web';
 import { CATEGORIES, TOOLS, CategoryKey, Tool } from '../config/toolCategories';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -12,53 +12,22 @@ interface ToolCardProps {
 const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelect, isDark }) => (
   <TouchableOpacity
     onPress={() => onSelect(tool)}
-    style={{
-      backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-      borderRadius: 8,
-      padding: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: isDark ? '#374151' : '#e5e7eb',
-    }}
+    style={[styles.toolCard, isDark ? styles.darkToolCard : styles.lightToolCard]}
   >
-    <Text style={{ 
-      fontSize: 18, 
-      fontWeight: 'bold',
-      color: isDark ? '#10b981' : '#059669',
-      marginBottom: 8 
-    }}>
+    <Text style={[styles.toolTitle, isDark ? styles.darkText : styles.lightText]}>
       {tool.name}
     </Text>
-    <Text style={{ 
-      color: isDark ? '#9ca3af' : '#6b7280',
-      marginBottom: 8 
-    }}>
+    <Text style={[styles.toolDescription, isDark ? styles.darkSecondaryText : styles.lightSecondaryText]}>
       {tool.description}
     </Text>
-    <View style={{ flexDirection: 'row', gap: 8 }}>
-      <View style={{
-        backgroundColor: isDark ? '#374151' : '#e5e7eb',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 12,
-      }}>
-        <Text style={{
-          color: isDark ? '#d1d5db' : '#4b5563',
-          fontSize: 12,
-        }}>
+    <View style={styles.tagContainer}>
+      <View style={[styles.tag, isDark ? styles.darkTag : styles.lightTag]}>
+        <Text style={[styles.tagText, isDark ? styles.darkTagText : styles.lightTagText]}>
           {CATEGORIES[tool.category].name}
         </Text>
       </View>
-      <View style={{
-        backgroundColor: isDark ? '#374151' : '#e5e7eb',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 12,
-      }}>
-        <Text style={{
-          color: isDark ? '#d1d5db' : '#4b5563',
-          fontSize: 12,
-        }}>
+      <View style={[styles.tag, isDark ? styles.darkTag : styles.lightTag]}>
+        <Text style={[styles.tagText, isDark ? styles.darkTagText : styles.lightTagText]}>
           {tool.function}
         </Text>
       </View>
@@ -84,33 +53,22 @@ const ToolsList: React.FC = () => {
   }, [searchQuery, selectedCategory, selectedFunction]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       {/* Search and Filters */}
-      <View style={{ 
-        padding: 16,
-        backgroundColor: isDark ? '#111827' : '#ffffff',
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? '#374151' : '#e5e7eb',
-      }}>
+      <View style={[styles.searchContainer, isDark ? styles.darkBg : styles.lightBg]}>
         <TextInput
           placeholder="Search tools..."
           placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          style={{
-            backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-            color: isDark ? '#ffffff' : '#000000',
-            padding: 12,
-            borderRadius: 6,
-            marginBottom: 16,
-          }}
+          style={[styles.searchInput, isDark ? styles.darkInput : styles.lightInput]}
         />
         
         {/* Category Filters */}
         <ScrollView 
-          horizontal 
+          horizontal={true}
           showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 12 }}
+          style={styles.filterScroll}
         >
           <TouchableOpacity
             onPress={() => setSelectedCategory('all')}
@@ -151,7 +109,7 @@ const ToolsList: React.FC = () => {
 
         {/* Function Filters */}
         <ScrollView 
-          horizontal 
+          horizontal={true}
           showsHorizontalScrollIndicator={false}
         >
           <TouchableOpacity
@@ -194,15 +152,11 @@ const ToolsList: React.FC = () => {
 
       {/* Tools List */}
       <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16 }}
+        style={[styles.toolList, isDark ? styles.darkBg : styles.lightBg]}
+        contentContainerStyle={styles.toolListContent}
       >
         {filteredTools.length === 0 ? (
-          <Text style={{
-            color: isDark ? '#d1d5db' : '#4b5563',
-            textAlign: 'center',
-            marginTop: 32,
-          }}>
+          <Text style={[styles.emptyText, isDark ? styles.darkText : styles.lightText]}>
             No tools found matching your criteria
           </Text>
         ) : (
@@ -222,5 +176,110 @@ const ToolsList: React.FC = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  searchContainer: {
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  darkBg: {
+    backgroundColor: '#111827',
+    borderBottomColor: '#374151',
+  },
+  lightBg: {
+    backgroundColor: '#ffffff',
+    borderBottomColor: '#e5e7eb',
+  },
+  searchInput: {
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  darkInput: {
+    backgroundColor: '#1f2937',
+    color: '#ffffff',
+    borderColor: '#374151',
+  },
+  lightInput: {
+    backgroundColor: '#f3f4f6',
+    color: '#000000',
+    borderColor: '#e5e7eb',
+  },
+  filterScroll: {
+    marginBottom: 12,
+  },
+  toolList: {
+    flex: 1,
+  },
+  toolListContent: {
+    padding: 16,
+  },
+  toolCard: {
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  darkToolCard: {
+    backgroundColor: '#1f2937',
+    borderColor: '#374151',
+  },
+  lightToolCard: {
+    backgroundColor: '#f3f4f6',
+    borderColor: '#e5e7eb',
+  },
+  toolTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  toolDescription: {
+    marginBottom: 8,
+  },
+  darkText: {
+    color: '#e5e7eb',
+  },
+  lightText: {
+    color: '#1f2937',
+  },
+  darkSecondaryText: {
+    color: '#9ca3af',
+  },
+  lightSecondaryText: {
+    color: '#6b7280',
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  tag: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+  },
+  darkTag: {
+    backgroundColor: '#374151',
+  },
+  lightTag: {
+    backgroundColor: '#e5e7eb',
+  },
+  tagText: {
+    fontSize: 12,
+  },
+  darkTagText: {
+    color: '#d1d5db',
+  },
+  lightTagText: {
+    color: '#4b5563',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 32,
+  },
+});
 
 export default ToolsList;

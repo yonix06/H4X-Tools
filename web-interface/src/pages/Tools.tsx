@@ -4,6 +4,11 @@ import { useTheme } from '../contexts/ThemeContext';
 import { CategoryKey, CATEGORIES, TOOLS, Tool } from '../config/toolCategories';
 import { securityApi } from '../services/securityApi';
 
+// Add proper types for TextInput events
+interface NativeTextEvent {
+  nativeEvent: { text: string };
+}
+
 const Tools: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -65,60 +70,43 @@ const Tools: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       {/* Header */}
-      <View style={{ 
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16,
-      }}>
-        <Text style={{ 
-          fontSize: 24,
-          fontWeight: 'bold',
-          color: isDark ? '#10b981' : '#059669'
-        }}>
+      <View className="bg-dark-gray-800 p-4">
+        <Text className="text-2xl font-bold text-hacker-green">
           Security Tools
         </Text>
-        
-        {/* Search */}
+      </View>
+
+      {/* Search and Filters */}
+      <View className="bg-dark-gray-900 p-4">
         <TextInput
-          style={{
-            backgroundColor: isDark ? '#374151' : '#ffffff',
-            color: isDark ? '#e5e7eb' : '#1f2937',
-            padding: 8,
-            borderRadius: 6,
-            marginTop: 12,
-            borderWidth: 1,
-            borderColor: isDark ? '#4b5563' : '#d1d5db',
-          }}
+          className="input-field w-full mb-4"
           placeholder="Search tools..."
           placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
           value={searchQuery}
-          onChange={e => setSearchQuery(e.nativeEvent.text)}
+          onChangeText={setSearchQuery}
         />
 
         {/* Category Filter */}
         <ScrollView 
-          horizontal 
+          horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ marginTop: 12 }}
+          className="flex-row space-x-2 mb-4"
         >
           <TouchableOpacity
             onPress={() => setActiveCategory('all')}
-            style={{
-              backgroundColor: activeCategory === 'all' 
-                ? (isDark ? '#10b981' : '#059669')
-                : (isDark ? '#374151' : '#e5e7eb'),
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 16,
-              marginRight: 8,
-            }}
+            className={`px-4 py-2 rounded-full ${
+              activeCategory === 'all' 
+                ? 'bg-hacker-green'
+                : 'bg-dark-gray-800'
+            }`}
           >
-            <Text style={{
-              color: activeCategory === 'all'
-                ? '#ffffff'
-                : (isDark ? '#d1d5db' : '#4b5563'),
-            }}>
+            <Text className={
+              activeCategory === 'all'
+                ? 'text-white font-bold'
+                : 'text-gray-300'
+            }>
               All
             </Text>
           </TouchableOpacity>
@@ -127,26 +115,17 @@ const Tools: React.FC = () => {
             <TouchableOpacity
               key={key}
               onPress={() => setActiveCategory(key as CategoryKey)}
-              style={{
-                backgroundColor: activeCategory === key
-                  ? (isDark ? '#10b981' : '#059669')
-                  : (isDark ? '#374151' : '#e5e7eb'),
-                paddingVertical: 6,
-                paddingHorizontal: 12,
-                borderRadius: 16,
-                marginRight: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
+              className={`px-4 py-2 rounded-full ${
+                activeCategory === key
+                  ? 'bg-hacker-green'
+                  : 'bg-dark-gray-800'
+              }`}
             >
-              {category.icon && (
-                <Text style={{ marginRight: 4 }}>{category.icon}</Text>
-              )}
-              <Text style={{
-                color: activeCategory === key
-                  ? '#ffffff'
-                  : (isDark ? '#d1d5db' : '#4b5563'),
-              }}>
+              <Text className={
+                activeCategory === key
+                  ? 'text-white font-bold'
+                  : 'text-gray-300'
+              }>
                 {category.name}
               </Text>
             </TouchableOpacity>
@@ -155,17 +134,12 @@ const Tools: React.FC = () => {
       </View>
 
       {/* Main Content */}
-      <ScrollView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f9fafb' }}>
-        <View style={{ padding: 16, maxWidth: 1200, marginHorizontal: 'auto', width: '100%' }}>
-          <View style={{ flexDirection: 'row', gap: 16 }}>
+      <ScrollView className="flex-1 bg-dark-gray-900">
+        <View className="p-4 max-w-7xl mx-auto">
+          <View className="flex-row gap-4">
             {/* Tool List */}
-            <View style={{ flex: 1 }}>
-              <Text style={{
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: isDark ? '#d1d5db' : '#4b5563',
-                marginBottom: 12,
-              }}>
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-gray-200 mb-4">
                 Available Tools
               </Text>
 
@@ -173,58 +147,26 @@ const Tools: React.FC = () => {
                 <TouchableOpacity
                   key={tool.id}
                   onPress={() => handleToolSelect(tool)}
-                  style={{
-                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 8,
-                    borderWidth: 1,
-                    borderColor: selectedTool?.id === tool.id
-                      ? (isDark ? '#10b981' : '#059669')
-                      : (isDark ? '#374151' : '#e5e7eb'),
-                  }}
+                  className={`bg-dark-gray-800 rounded-lg p-4 mb-4 border ${
+                    selectedTool?.id === tool.id
+                      ? 'border-hacker-green'
+                      : 'border-dark-gray-700'
+                  }`}
                 >
-                  <Text style={{
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    color: isDark ? '#e5e7eb' : '#1f2937',
-                    marginBottom: 4,
-                  }}>
+                  <Text className="text-lg font-bold text-gray-200 mb-2">
                     {CATEGORIES[tool.category].icon} {tool.name}
                   </Text>
-                  <Text style={{
-                    color: isDark ? '#9ca3af' : '#6b7280',
-                    marginBottom: 8,
-                  }}>
+                  <Text className="text-gray-400 mb-4">
                     {tool.description}
                   </Text>
-                  <View style={{
-                    flexDirection: 'row',
-                    gap: 8,
-                  }}>
-                    <View style={{
-                      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-                      paddingVertical: 2,
-                      paddingHorizontal: 8,
-                      borderRadius: 12,
-                    }}>
-                      <Text style={{
-                        color: isDark ? '#10b981' : '#059669',
-                        fontSize: 12,
-                      }}>
+                  <View className="flex-row gap-2">
+                    <View className="bg-dark-gray-900 px-3 py-1 rounded-full">
+                      <Text className="text-hacker-green text-sm">
                         {CATEGORIES[tool.category].name}
                       </Text>
                     </View>
-                    <View style={{
-                      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-                      paddingVertical: 2,
-                      paddingHorizontal: 8,
-                      borderRadius: 12,
-                    }}>
-                      <Text style={{
-                        color: isDark ? '#d1d5db' : '#4b5563',
-                        fontSize: 12,
-                      }}>
+                    <View className="bg-dark-gray-900 px-3 py-1 rounded-full">
+                      <Text className="text-gray-300 text-sm">
                         {tool.function}
                       </Text>
                     </View>
@@ -235,43 +177,23 @@ const Tools: React.FC = () => {
 
             {/* Tool Input Form */}
             {selectedTool && (
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: isDark ? '#d1d5db' : '#4b5563',
-                  marginBottom: 12,
-                }}>
+              <View className="flex-1">
+                <Text className="text-lg font-bold text-gray-200 mb-4">
                   {selectedTool.name}
                 </Text>
 
-                <View style={{
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                  borderRadius: 8,
-                  padding: 16,
-                  marginBottom: 16,
-                }}>
+                <View className="bg-dark-gray-800 rounded-lg p-4 mb-4">
                   {selectedTool.inputs.map(input => (
-                    <View key={input.name} style={{ marginBottom: 12 }}>
-                      <Text style={{
-                        color: isDark ? '#d1d5db' : '#4b5563',
-                        marginBottom: 4,
-                      }}>
+                    <View key={input.name} className="mb-4">
+                      <Text className="text-gray-300 mb-2">
                         {input.name} {input.required && '*'}
                       </Text>
                       <TextInput
-                        style={{
-                          backgroundColor: isDark ? '#374151' : '#f3f4f6',
-                          color: isDark ? '#e5e7eb' : '#1f2937',
-                          padding: 8,
-                          borderRadius: 6,
-                          borderWidth: 1,
-                          borderColor: isDark ? '#4b5563' : '#d1d5db',
-                        }}
+                        className="input-field w-full"
                         placeholder={input.placeholder}
                         placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
                         value={toolInputs[input.name] || ''}
-                        onChange={e => handleInputChange(input.name, e.nativeEvent.text)}
+                        onChangeText={(text: string) => handleInputChange(input.name, text)}
                         secureTextEntry={input.type === 'password'}
                       />
                     </View>
@@ -280,27 +202,17 @@ const Tools: React.FC = () => {
                   <TouchableOpacity
                     onPress={executeTool}
                     disabled={isLoading}
-                    style={{
-                      backgroundColor: isDark ? '#10b981' : '#059669',
-                      padding: 12,
-                      borderRadius: 6,
-                      opacity: isLoading ? 0.7 : 1,
-                    }}
+                    className={`btn-primary w-full mt-4 ${
+                      isLoading ? 'opacity-70' : ''
+                    }`}
                   >
-                    <Text style={{
-                      color: '#ffffff',
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                    }}>
+                    <Text className="text-center text-white font-bold">
                       {isLoading ? 'Running...' : 'Run Tool'}
                     </Text>
                   </TouchableOpacity>
 
                   {error && (
-                    <Text style={{
-                      color: isDark ? '#ef4444' : '#dc2626',
-                      marginTop: 8,
-                    }}>
+                    <Text className="text-red-500 mt-4">
                       {error}
                     </Text>
                   )}
@@ -308,24 +220,11 @@ const Tools: React.FC = () => {
 
                 {/* Results */}
                 {result && (
-                  <View style={{
-                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                    borderRadius: 8,
-                    padding: 16,
-                  }}>
-                    <Text style={{
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      color: isDark ? '#d1d5db' : '#4b5563',
-                      marginBottom: 8,
-                    }}>
+                  <View className="bg-dark-gray-800 rounded-lg p-4">
+                    <Text className="text-lg font-bold text-gray-200 mb-4">
                       Results
                     </Text>
-                    <Text style={{
-                      color: isDark ? '#e5e7eb' : '#1f2937',
-                      fontFamily: 'monospace',
-                      whiteSpace: 'pre-wrap',
-                    }}>
+                    <Text className="text-gray-200 font-mono whitespace-pre-wrap">
                       {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
                     </Text>
                   </View>

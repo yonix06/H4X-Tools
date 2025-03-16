@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native-web';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native-web';
 import { useTheme } from '../contexts/ThemeContext';
 import { SecurityStats } from '../components/SecurityStats';
 import { securityApi } from '../services/securityApi';
@@ -80,48 +80,24 @@ export const SecurityDashboard: React.FC = () => {
     status: 'active' | 'inactive' | 'error',
     details?: string
   ) => (
-    <View style={{
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderRadius: 8,
-      padding: 16,
-      marginBottom: 16,
-    }}>
-      <Text style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: isDark ? '#d1d5db' : '#4b5563',
-        marginBottom: 8,
-      }}>
+    <View className="bg-dark-gray-800 rounded-lg p-4 mb-4">
+      <Text className="text-lg font-bold text-gray-300 mb-2">
         {title}
       </Text>
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-      }}>
-        <View style={{
-          width: 12,
-          height: 12,
-          borderRadius: 6,
-          backgroundColor: status === 'active' 
-            ? (isDark ? '#22c55e' : '#16a34a')
+      <View className="flex flex-row items-center gap-2">
+        <View className={`w-3 h-3 rounded-full ${
+          status === 'active' 
+            ? 'bg-green-500'
             : status === 'error'
-              ? (isDark ? '#ef4444' : '#dc2626')
-              : (isDark ? '#6b7280' : '#9ca3af'),
-        }} />
-        <Text style={{
-          color: isDark ? '#e5e7eb' : '#1f2937',
-          fontSize: 14,
-        }}>
+              ? 'bg-red-500'
+              : 'bg-gray-500'
+        }`} />
+        <Text className="text-gray-200 text-sm">
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </Text>
       </View>
       {details && (
-        <Text style={{
-          color: isDark ? '#9ca3af' : '#6b7280',
-          fontSize: 14,
-          marginTop: 8,
-        }}>
+        <Text className="text-gray-400 text-sm mt-2">
           {details}
         </Text>
       )}
@@ -129,30 +105,20 @@ export const SecurityDashboard: React.FC = () => {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       {/* Header */}
-      <View style={{ 
-        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
-        padding: 16,
-      }}>
-        <Text style={{ 
-          fontSize: 24,
-          fontWeight: 'bold',
-          color: isDark ? '#10b981' : '#059669'
-        }}>
+      <View className="bg-dark-gray-800 p-4">
+        <Text className="text-2xl font-bold text-hacker-green">
           Security Dashboard
         </Text>
       </View>
 
       {/* Main Content */}
-      <ScrollView 
-        style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f9fafb' }}
-        contentContainerStyle={{ padding: 16 }}
-      >
-        <View style={{ maxWidth: 1200, marginHorizontal: 'auto', width: '100%' }}>
+      <ScrollView className="flex-1 bg-dark-gray-900">
+        <View className="p-4 max-w-7xl mx-auto w-full">
           {/* Status Cards */}
-          <View style={{ flexDirection: 'row', gap: 16, marginBottom: 24 }}>
-            <View style={{ flex: 1 }}>
+          <View className="flex flex-row gap-4 mb-6">
+            <View className="flex-1">
               {renderStatusCard(
                 'Fail2Ban',
                 fail2banStatus?.status || 'inactive',
@@ -161,7 +127,7 @@ export const SecurityDashboard: React.FC = () => {
                   : undefined
               )}
             </View>
-            <View style={{ flex: 1 }}>
+            <View className="flex-1">
               {renderStatusCard(
                 'VPN Service',
                 vpnStatus?.is_active ? 'active' : 'inactive',
@@ -173,18 +139,8 @@ export const SecurityDashboard: React.FC = () => {
           </View>
 
           {/* Banned IPs */}
-          <View style={{
-            backgroundColor: isDark ? '#1f2937' : '#ffffff',
-            borderRadius: 8,
-            padding: 16,
-            marginBottom: 24,
-          }}>
-            <Text style={{
-              fontSize: 18,
-              fontWeight: 'bold',
-              color: isDark ? '#d1d5db' : '#4b5563',
-              marginBottom: 16,
-            }}>
+          <View className="bg-dark-gray-800 rounded-lg p-4 mb-6">
+            <Text className="text-xl font-bold text-gray-300 mb-4">
               Banned IPs
             </Text>
 
@@ -192,56 +148,28 @@ export const SecurityDashboard: React.FC = () => {
               bannedIPs.map(ip => (
                 <View
                   key={`${ip.ip}-${ip.jail}`}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: 12,
-                    backgroundColor: isDark ? '#374151' : '#f3f4f6',
-                    borderRadius: 6,
-                    marginBottom: 8,
-                  }}
+                  className="flex flex-row items-center justify-between p-3 bg-dark-gray-900 rounded-md mb-2"
                 >
                   <View>
-                    <Text style={{
-                      color: isDark ? '#e5e7eb' : '#1f2937',
-                      fontWeight: 'bold',
-                      marginBottom: 4,
-                    }}>
+                    <Text className="text-base font-bold text-gray-200 mb-1">
                       {ip.ip}
                     </Text>
-                    <Text style={{
-                      color: isDark ? '#9ca3af' : '#6b7280',
-                      fontSize: 12,
-                    }}>
+                    <Text className="text-sm text-gray-400">
                       Jail: {ip.jail} | Banned: {new Date(ip.timestamp).toLocaleString()}
                     </Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => handleUnbanIP(ip.ip, ip.jail)}
-                    style={{
-                      backgroundColor: isDark ? '#ef4444' : '#dc2626',
-                      paddingVertical: 6,
-                      paddingHorizontal: 12,
-                      borderRadius: 6,
-                    }}
+                    className="bg-red-600 px-3 py-2 rounded-md"
                   >
-                    <Text style={{
-                      color: '#ffffff',
-                      fontSize: 12,
-                      fontWeight: 'bold',
-                    }}>
+                    <Text className="text-xs font-bold text-white">
                       Unban
                     </Text>
                   </TouchableOpacity>
                 </View>
               ))
             ) : (
-              <Text style={{
-                color: isDark ? '#9ca3af' : '#6b7280',
-                textAlign: 'center',
-                padding: 24,
-              }}>
+              <Text className="text-center text-gray-500 p-6">
                 No banned IPs
               </Text>
             )}
