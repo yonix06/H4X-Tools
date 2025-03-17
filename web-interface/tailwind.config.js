@@ -17,25 +17,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'hacker-green': {
-          DEFAULT: '#10b981',
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-        },
+        'hacker-green': '#00ff00',
         'dark-gray': {
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
+          700: '#2d2d2d',
+          800: '#1f1f1f',
+          900: '#141414',
         },
-        inherit: 'inherit',
+        'cyber-purple': {
+          500: '#9333ea',
+          600: '#7928ca',
+          700: '#6b21a8',
+        }
       },
       fontFamily: {
         sans: [
@@ -48,22 +40,13 @@ module.exports = {
           'Arial',
           'sans-serif',
         ],
-        mono: [
-          'ui-monospace',
-          'SFMono-Regular',
-          'Monaco',
-          'Menlo',
-          'Consolas',
-          'Liberation Mono',
-          'Courier New',
-          'monospace',
-        ],
+        mono: ['Fira Code', 'ui-monospace', 'monospace'],
       },
       spacing: {
         '400': '400px',
       },
       animation: {
-        'pulse-slow': 'pulse 3s infinite',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'fade-in': 'fadeIn 0.3s ease-in-out',
       },
       keyframes: {
@@ -83,9 +66,8 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/forms')({
-      strategy: 'class',
-    }),
+    require('@tailwindcss/forms'),
+    require('tailwind-scrollbar'),
     require('@tailwindcss/typography'),
   ],
   important: true,

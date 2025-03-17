@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2015",
     "lib": [
       "dom",
       "dom.iterable",
@@ -28,12 +28,10 @@
       "react",
       "react-dom",
       "react-native",
-    ]
+    ],
+    "downlevelIteration": true
   },
   "include": [
-    "src",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts"
+    "src"
   ]
 }

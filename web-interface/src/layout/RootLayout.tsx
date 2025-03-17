@@ -1,17 +1,21 @@
 import React from 'react';
-import Navigation from './Navigation';
+import { useTheme } from '../contexts/ThemeContext';
+import Header from './Header';
 
 interface RootLayoutProps {
   children: React.ReactNode;
 }
 
 const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Navigation />
-      <main className="flex-1 overflow-auto p-4">
+    <div className={`flex flex-col h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
         {children}
-      </main>
+      </div>
     </div>
   );
 };

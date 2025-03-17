@@ -1,223 +1,223 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native-web';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { CategoryKey, CATEGORIES, TOOLS, Tool } from '../config/toolCategories';
-import { securityApi } from '../services/securityApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+
+interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: React.ReactNode;
+}
 
 const Tools: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [activeCategory, setActiveCategory] = useState<CategoryKey | 'all'>('all');
+  const location = useLocation();
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
-  const [toolInputs, setToolInputs] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  const filteredTools = TOOLS.filter(tool => {
-    const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
-    const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         tool.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  const handleToolSelect = (tool: Tool) => {
-    setSelectedTool(tool);
-    setToolInputs({});
-    setResult(null);
-    setError(null);
-  };
-
-  const handleInputChange = (name: string, value: string) => {
-    setToolInputs(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const executeTool = async () => {
-    if (!selectedTool) return;
-
-    const missingInputs = selectedTool.inputs
-      .filter(input => input.required && !toolInputs[input.name]);
-    
-    if (missingInputs.length > 0) {
-      setError(`Missing required fields: ${missingInputs.map(i => i.name).join(', ')}`);
-      return;
+  const tools: Tool[] = [
+    {
+      id: 'ip-lookup',
+      name: 'IP Lookup',
+      description: 'Rechercher des informations sur une adresse IP',
+      category: 'Network',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        </svg>
+      ),
+    },
+    {
+      id: 'port-scanner',
+      name: 'Port Scanner',
+      description: 'Scanner les ports ouverts sur un hôte',
+      category: 'Network',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+    },
+    {
+      id: 'web-scraper',
+      name: 'Web Scraper',
+      description: 'Extraire des données de pages web',
+      category: 'Web',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'email-search',
+      name: 'Email Search',
+      description: 'Rechercher des informations sur une adresse email',
+      category: 'Investigation',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'username-search',
+      name: 'Username Search',
+      description: 'Rechercher un nom d&apos;utilisateur sur différentes plateformes',
+      category: 'Investigation',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
     }
+  ];
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await securityApi.executeTool(selectedTool.id, toolInputs);
-      if (response.status === 'success') {
-        setResult(response.data);
-      } else {
-        setError(response.message || 'Tool execution failed');
-      }
-    } catch (err) {
-      setError('Failed to execute tool');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const toolId = params.get('tool');
+    if (toolId) {
+      setSelectedTool(toolId);
     }
-  };
+  }, [location]);
+
+  const categories = [...new Set(tools.map(tool => tool.category))];
+  
+  const filteredTools = tools.filter(tool => 
+    tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <View className="flex-1 bg-dark-gray-900">
-      {/* Search and Filters */}
-      <View className="border-b border-dark-gray-700 bg-dark-gray-800 p-4">
-        <View className="max-w-7xl mx-auto">
-          <TextInput
-            className="input-field mb-4"
-            placeholder="Search tools..."
-            placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-
-          <ScrollView 
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="flex-row space-x-2"
-          >
-            <TouchableOpacity
-              onPress={() => setActiveCategory('all')}
-              className={`px-4 py-2 rounded-full ${
-                activeCategory === 'all' 
-                  ? 'bg-hacker-green'
-                  : 'bg-dark-gray-700'
-              }`}
-            >
-              <Text className={activeCategory === 'all' ? 'text-white' : 'text-gray-300'}>
-                All Tools
-              </Text>
-            </TouchableOpacity>
-
-            {Object.entries(CATEGORIES).map(([key, category]) => (
-              <TouchableOpacity
-                key={key}
-                onPress={() => setActiveCategory(key as CategoryKey)}
-                className={`px-4 py-2 rounded-full ${
-                  activeCategory === key
-                    ? 'bg-hacker-green'
-                    : 'bg-dark-gray-700'
-                }`}
+    <div className={`flex-1 h-full overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="h-full flex flex-col">
+        {/* Header avec barre de recherche */}
+        <div className={`p-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+          <div className="max-w-4xl mx-auto">
+            <h1 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Outils disponibles
+            </h1>
+            <div className="relative">
+              <input
+                type="search"
+                placeholder="Rechercher un outil..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`
+                  w-full pl-10 pr-4 py-2 rounded-lg
+                  ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}
+                  border ${isDark ? 'border-gray-700' : 'border-gray-300'}
+                  focus:outline-none focus:ring-2 focus:ring-purple-500
+                `}
+              />
+              <svg
+                className={`absolute left-3 top-2.5 h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <Text className={`${
-                  activeCategory === key ? 'text-white' : 'text-gray-300'
-                }`}>
-                  {category.icon} {category.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
 
-      {/* Main Content */}
-      <View className="max-w-7xl mx-auto p-4 flex-1">
-        <View className="flex-row gap-6">
-          {/* Tool List */}
-          <ScrollView className="flex-1">
-            <View className="space-y-4">
-              {filteredTools.map(tool => (
-                <TouchableOpacity
-                  key={tool.id}
-                  onPress={() => handleToolSelect(tool)}
-                  className={`p-4 rounded-lg border ${
-                    selectedTool?.id === tool.id
-                      ? 'border-hacker-green bg-dark-gray-800'
-                      : 'border-dark-gray-700 bg-dark-gray-800 hover:border-hacker-green'
-                  } transition-colors duration-200`}
+        {/* Contenu principal */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="max-w-4xl mx-auto">
+            {categories.map(category => {
+              const categoryTools = filteredTools.filter(tool => tool.category === category);
+              if (categoryTools.length === 0) return null;
+
+              return (
+                <div key={category} className="mb-8">
+                  <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {category}
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {categoryTools.map(tool => (
+                      <button
+                        key={tool.id}
+                        onClick={() => setSelectedTool(tool.id)}
+                        className={`
+                          p-4 rounded-xl text-left transition-all
+                          ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}
+                          ${selectedTool === tool.id ? 'ring-2 ring-purple-500' : ''}
+                          border ${isDark ? 'border-gray-700' : 'border-gray-200'}
+                          hover:shadow-lg group
+                        `}
+                      >
+                        <div className="flex items-start space-x-4">
+                          <div className={`
+                            p-2 rounded-lg
+                            ${isDark ? 'bg-gray-700 group-hover:bg-gray-600' : 'bg-gray-100 group-hover:bg-gray-200'}
+                          `}>
+                            {tool.icon}
+                          </div>
+                          <div>
+                            <h3 className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {tool.name}
+                            </h3>
+                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {tool.description}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Zone de l'outil sélectionné */}
+        {selectedTool && (
+          <div className={`
+            fixed inset-0 z-50 flex items-center justify-center p-4
+            bg-black bg-opacity-50 animate-fade-in
+          `}>
+            <div className={`
+              w-full max-w-4xl max-h-[90vh] overflow-auto rounded-xl
+              ${isDark ? 'bg-gray-800' : 'bg-white'}
+              p-6 shadow-xl animate-fade-in
+            `}>
+              <div className="flex justify-between items-start mb-6">
+                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {tools.find(t => t.id === selectedTool)?.name}
+                </h2>
+                <button
+                  onClick={() => setSelectedTool(null)}
+                  className={`
+                    p-2 rounded-lg hover:bg-gray-100
+                    ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
+                  `}
                 >
-                  <Text className="text-lg font-bold text-gray-200 mb-2">
-                    {CATEGORIES[tool.category].icon} {tool.name}
-                  </Text>
-                  <Text className="text-gray-400 mb-3">
-                    {tool.description}
-                  </Text>
-                  <View className="flex-row space-x-2">
-                    <View className="px-2 py-1 rounded-full bg-dark-gray-700">
-                      <Text className="text-sm text-hacker-green">
-                        {CATEGORIES[tool.category].name}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-
-              {filteredTools.length === 0 && (
-                <Text className="text-gray-400 text-center py-8">
-                  No tools found matching your search
-                </Text>
-              )}
-            </View>
-          </ScrollView>
-
-          {/* Tool Details and Execution */}
-          {selectedTool && (
-            <View className="w-96 flex-shrink-0">
-              <View className="bg-dark-gray-800 rounded-lg p-6 border border-dark-gray-700">
-                <Text className="text-xl font-bold text-gray-200 mb-4">
-                  {selectedTool.name}
-                </Text>
-
-                {selectedTool.inputs.map(input => (
-                  <View key={input.name} className="mb-4">
-                    <Text className="text-gray-300 mb-2">
-                      {input.name} {input.required && '*'}
-                    </Text>
-                    <TextInput
-                      className="input-field"
-                      placeholder={input.placeholder}
-                      placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
-                      value={toolInputs[input.name] || ''}
-                      onChangeText={(text: string) => handleInputChange(input.name, text)}
-                      secureTextEntry={input.type === 'password'}
-                      multiline={input.type === 'textarea'}
-                      numberOfLines={input.type === 'textarea' ? 4 : 1}
-                    />
-                  </View>
-                ))}
-
-                <TouchableOpacity
-                  onPress={executeTool}
-                  disabled={isLoading}
-                  className={`btn-primary w-full ${isLoading ? 'opacity-50' : ''}`}
-                >
-                  <Text className="text-center text-white font-bold">
-                    {isLoading ? 'Running...' : 'Execute Tool'}
-                  </Text>
-                </TouchableOpacity>
-
-                {error && (
-                  <Text className="mt-4 text-red-500 text-center">
-                    {error}
-                  </Text>
-                )}
-
-                {result && (
-                  <View className="mt-6">
-                    <Text className="text-lg font-bold text-gray-200 mb-2">
-                      Results
-                    </Text>
-                    <ScrollView className="bg-dark-gray-700 rounded-lg p-4 max-h-96">
-                      <Text className="text-gray-300 font-mono whitespace-pre-wrap">
-                        {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-                      </Text>
-                    </ScrollView>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {isLoading && <LoadingSpinner />}
-    </View>
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Contenu de l'outil */}
+              <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                  Interface de l'outil en cours de développement...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
