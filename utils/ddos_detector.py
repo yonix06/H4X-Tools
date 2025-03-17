@@ -25,7 +25,7 @@ import threading
 import queue
 import psutil
 from datetime import datetime, timedelta
-from collections import Counter, defaultdict
+from collections import Counter
 from helper import printer, timer
 from colorama import Style
 
@@ -262,7 +262,7 @@ class DDoSDetector:
                         self.packet_counts[src_ip] += 1
                         
                         # Count SYN packets (potential SYN flood)
-                        if parsed.get('flags') and 'S' in parsed.get('flags') and not 'A' in parsed.get('flags'):
+                        if parsed.get('flags') and 'S' in parsed.get('flags') and 'A' not in parsed.get('flags'):
                             self.syn_counts[src_ip] += 1
                 
                 # Check if window should be processed
@@ -595,7 +595,7 @@ class DDoSDetector:
                     self.packet_counts[src_ip] += 1
                     
                     # Count SYN packets (potential SYN flood)
-                    if parsed.get('flags') and 'S' in parsed.get('flags') and not 'A' in parsed.get('flags'):
+                    if parsed.get('flags') and 'S' in parsed.get('flags') and 'A' not in parsed.get('flags'):
                         self.syn_counts[src_ip] += 1
             
             # Process the last window if it has packets
