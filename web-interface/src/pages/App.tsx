@@ -196,7 +196,44 @@ const TOOLS: Tool[] = [
     description: 'Encodes/decodes using Base64/32/16.',
     category: 'Cryptography',
     path: '/tools?tool=basexx',
-  }
+  },
+  {
+    id: 'snort-ids',
+    name: 'Snort IDS',
+    description: 'Analyse le trafic réseau pour détecter les intrusions et menaces.',
+    category: 'Network',
+    path: '/tools?tool=snort-ids',
+    highlight: true
+  },
+  {
+    id: 'vuln-scanner',
+    name: 'Vulnerability Scanner',
+    description: 'Scanne un réseau ou hôte pour détecter les vulnérabilités connues.',
+    category: 'Network',
+    path: '/tools?tool=vuln-scanner',
+    highlight: true
+  },
+  {
+    id: 'ddos-detector',
+    name: 'DDoS Detector',
+    description: 'Détecte et analyse les attaques DDoS en temps réel.',
+    category: 'Network',
+    path: '/tools?tool=ddos-detector',
+  },
+  {
+    id: 'fail2ban-manager',
+    name: 'Fail2ban Manager',
+    description: 'Gère et visualise les bans automatiques de Fail2ban.',
+    category: 'System',
+    path: '/tools?tool=fail2ban-manager',
+  },
+  {
+    id: 'network-monitor',
+    name: 'Network Monitor',
+    description: 'Surveillance du trafic réseau et alerte en temps réel.',
+    category: 'Network',
+    path: '/tools?tool=network-monitor',
+  },
 ];
 
 interface SecurityMetrics {
