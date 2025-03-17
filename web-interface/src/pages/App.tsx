@@ -1,12 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native-web';
-import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
-import { ThemeProvider } from '../contexts/ThemeContext';
-import { HistoryProvider } from '../contexts/HistoryContext';
-import RootLayout from '../layout/RootLayout';
-import Tools from './Tools';
-import Investigation from './Investigation';
-import SecurityDashboard from './SecurityDashboard';
+import { useNavigate } from 'react-router-dom';
 
 const StatsCard = ({ title, value, trend }: { title: string; value: string; trend?: 'up' | 'down' }) => (
   <View className="bg-dark-gray-800 rounded-xl p-6 border border-dark-gray-700 hover:border-hacker-green transition-all duration-200">
@@ -156,23 +150,4 @@ const WelcomePage: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
-  return (
-    <ThemeProvider>
-      <HistoryProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<RootLayout />}>
-              <Route index element={<WelcomePage />} />
-              <Route path="tools" element={<Tools />} />
-              <Route path="investigation" element={<Investigation />} />
-              <Route path="security" element={<SecurityDashboard />} />
-            </Route>
-          </Routes>
-        </Router>
-      </HistoryProvider>
-    </ThemeProvider>
-  );
-};
-
-export default App;
+export default WelcomePage;

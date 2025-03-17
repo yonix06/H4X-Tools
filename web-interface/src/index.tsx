@@ -1,18 +1,37 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './pages/App';
-import { ThemeProvider } from './contexts/ThemeContext';
+import ReactDOM from 'react-dom/client';
 import './styles/index.css';
-import './styles/App.css';
 
-const container = document.getElementById('root');
-if (!container) throw new Error('Failed to find the root element');
-const root = createRoot(container);
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { HistoryProvider } from './contexts/HistoryContext';
+import RootLayout from './layout/RootLayout';
+import Tools from './pages/Tools';
+import Investigation from './pages/Investigation';
+import SecurityDashboard from './pages/SecurityDashboard';
+import WelcomePage from './pages/App';
+import Navigation from './layout/Navigation';
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
 
 root.render(
   <React.StrictMode>
     <ThemeProvider>
-      <App />
+      <HistoryProvider>
+      <BrowserRouter>
+        <RootLayout>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<WelcomePage />} />
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/investigation" element={<Investigation />} />
+            <Route path="/security" element={<SecurityDashboard />} />
+          </Routes>
+        </RootLayout>
+      </BrowserRouter>
+      </HistoryProvider>
     </ThemeProvider>
   </React.StrictMode>
 );
