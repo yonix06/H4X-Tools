@@ -95,7 +95,7 @@ const SnortIDS: React.FC = () => {
               className="input-field"
             />
             <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              L'interface réseau à surveiller, par exemple eth0 ou wlan0
+              L&apos;interface réseau à surveiller, par exemple eth0 ou wlan0
             </p>
           </div>
 
@@ -116,7 +116,7 @@ const SnortIDS: React.FC = () => {
               className="input-field"
             />
             <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              Durée de l'analyse en secondes (10-600)
+              Durée de l&apos;analyse en secondes (10-600)
             </p>
           </div>
 
@@ -151,7 +151,7 @@ const SnortIDS: React.FC = () => {
         <div className={`rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} overflow-hidden`}>
           <div className={`px-4 py-3 border-b ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"}`}>
             <h3 className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-              Résultats de l'analyse ({result.status})
+              Résultats de l&apos;analyse ({result.status})
             </h3>
           </div>
           
@@ -244,7 +244,7 @@ const SnortIDS: React.FC = () => {
             ) : (
               <div className={`p-4 rounded-lg text-center ${isDark ? "bg-green-900/20" : "bg-green-50"}`}>
                 <p className={`${isDark ? "text-green-300" : "text-green-700"}`}>
-                  Aucune alerte n'a été détectée pendant cette analyse.
+                  Aucune alerte n&apos;a été détectée pendant cette analyse.
                 </p>
               </div>
             )}
