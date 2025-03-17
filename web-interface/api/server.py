@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import os
 import sys
-import json
-import subprocess
+
 from datetime import datetime
 from flask import request, jsonify
-from flask_cors import CORS
+
 from dotenv import load_dotenv
 import importlib.util
 from models.database import db
-from models.models import ToolResult, Investigation, InvestigationNote, SecurityEvent
-from utils.security_monitor import SecurityMonitor
 from app import app
+from utils.whois_lookup import Lookup as WhoisLookup
+from utils.security_monitor import SecurityMonitor
+from models.models import ToolResult, Investigation, InvestigationNote, SecurityEvent
 
 # Load environment variables
 load_dotenv()
@@ -28,13 +28,13 @@ def import_tool(module_name, tool_id=None):
     """Import a tool module dynamically"""
     try:
         spec = importlib.util.spec_from_file_location(
-            module_name, 
+            module_name,
             os.path.join(root_dir, 'utils', f'{module_name}.py')
         )
         if spec is None or spec.loader is None:
             print(f"Failed to load spec for {module_name}")
             return None
-            
+
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         available_tools[tool_id or module_name] = {'status': 'available', 'module': module}
@@ -51,7 +51,7 @@ tools = {
     'phone_lookup': import_tool('phonenumber_lookup', 'phone_lookup'),
     'ip_lookup': import_tool('ip_lookup', 'ip_lookup'),
     'port_scanner': import_tool('port_scanner', 'port_scanner'),
-    'username_search': import_tool('search_username', 'username_search'),
+    'username_search': import_tool('search_username', 'search_username'),
     'cybercrime_int': import_tool('cybercrime_int', 'cybercrime_int'),
     'email_search': import_tool('email_search', 'email_search'),
     'webhook_spammer': import_tool('webhook_spammer', 'webhook_spammer'),
@@ -64,6 +64,48 @@ tools = {
     'local_user_enum': import_tool('local_user_enum', 'local_user_enum'),
     'caesar_cipher': import_tool('caesar_cipher', 'caesar_cipher'),
     'basexx': import_tool('basexx', 'basexx')
+}
+
+def execute_web_search(data):
+    """Executes the Web Search tool."""
+    query = data.get('query')
+    if not query:
+        raise ValueError('Query is required')
+    search = tools['web_search']['module'].Search(query)
+    return search.__dict__
+
+def execute_whois_lookup(data):
+    """Executes the Whois Lookup tool."""
+    domain = data.get('domain')
+    if not domain:
+        raise ValueError('Domain is required')
+    lookup = WhoisLookup(domain)
+    return lookup.q.__dict__
+
+def execute_leak_search(data):
+    """Executes the Leak Search tool."""
+    target = data.get('target')
+    if not target:
+        raise ValueError('Email or Domain is required')
+    search = tools['leak_search']['module'].Scan(target)
+    return search.__dict__
+
+def execute_basexx(data):
+    """Executes the BaseXX tool."""
+    message = data.get('message')
+    mode = data.get('mode')
+    encoding = data.get('encoding')
+    if not message or not mode or not encoding:
+        raise ValueError('Message, mode, and encoding are required')
+    basexx = tools['basexx']['module'].BaseXX(message, mode, encoding)
+    return basexx.__dict__
+
+TOOL_EXECUTORS = {
+    'ip-lookup': lambda data: tools['ip_lookup']['module'].Lookup(data.get('ip')).__dict__,
+    'whois-lookup': execute_whois_lookup,
+    'web-search': execute_web_search,
+    'leak-search': execute_leak_search,
+    'basexx': execute_basexx,
 }
 
 # Initialize security monitor
@@ -293,13 +335,19 @@ def unban_ip():
     else:
         return jsonify({
             "status": "error",
-            "message": f"Failed to unban IP {ip}",
+            "message": f"Failed to unbanned IP {ip}",
             "timestamp": datetime.now().isoformat()
         }), 500
 
 @app.route('/api/security/events', methods=['GET'])
 def security_events():
     events = SecurityEvent.query.order_by(SecurityEvent.timestamp.desc()).limit(100).all()
+    return jsonify({
+        "status": "success",
+        "data": [event.to_dict() for event in events],
+        "timestamp": datetime.now().isoformat()
+    })
+
     return jsonify({
         "status": "success",
         "data": [event.to_dict() for event in events],

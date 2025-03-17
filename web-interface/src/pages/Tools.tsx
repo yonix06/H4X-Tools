@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import IpLookup from '../components/tools/IpLookup';
+import WhoisLookup from '../components/tools/WhoisLookup';
+import WebSearch from '../components/tools/WebSearch';
+import LeakSearch from '../components/tools/LeakSearch';
+import BaseXX from '../components/tools/BaseXX';
 
 interface Tool {
   id: string;
@@ -71,6 +75,116 @@ const Tools: React.FC = () => {
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'whois-lookup',
+      name: 'WhoIs Lookup',
+      description: 'Looks up a domain and returns information about it.',
+      category: 'Investigation',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      ),
+    },
+    {
+      id: 'web-search',
+      name: 'Web Search',
+      description: 'Searches the internet for the given query.',
+      category: 'Search',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'leak-search',
+      name: 'Leak Search',
+      description: 'Searches if given email/domain has been compromised and leaked.',
+      category: 'Investigation',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      ),
+    },
+    {
+      id: 'fake-info',
+      name: 'Fake Info Generator',
+      description: 'Generates fake information using Faker.',
+      category: 'Utilities',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'wifi-finder',
+      name: 'Wi-Fi Finder',
+      description: 'Scans for nearby Wi-Fi networks.',
+      category: 'Network',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18.75a6 6 0 00-6-6v-1.5m6 7.5a6 6 0 016-6v-1.5m-6 7.5l6-6M6 11.25v3.75a9 9 0 1018 0v-3.75m-9 3.75a9 9 0 11-18 0z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'wifi-vault',
+      name: 'Wi-Fi Vault',
+      description: 'Scans for locally saved Wi-Fi passwords.',
+      category: 'Network',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L15 17H9l-1.257-4.257A6 6 0 012 9m13 5h-1.5M21 12a4 4 0 00-4 4M3 4h18M3 4a16 16 0 014.216 5.195M3 4a15 15 0 013.183 4.803" />
+        </svg>
+      ),
+    },
+    {
+      id: 'dirbuster',
+      name: 'Dir Buster',
+      description: 'Bruteforce directories on a website.',
+      category: 'Web',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+        </svg>
+      ),
+    },
+    {
+      id: 'local-users',
+      name: 'Local Users',
+      description: 'Enumerates local user accounts on the current machine.',
+      category: 'System',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+    },
+    {
+      id: 'caesar-cipher',
+      name: 'Caesar Cipher',
+      description: "Cipher/decipher/bruteforce a message using the Caesar's code.",
+      category: 'Cryptography',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg>
+      ),
+    },
+    {
+      id: 'basexx',
+      name: 'BaseXX',
+      description: 'Encodes/decodes a message using Base64/32/16.',
+      category: 'Cryptography',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
         </svg>
       ),
     }
@@ -219,6 +333,16 @@ const Tools: React.FC = () => {
                   {selectedTool === 'web-scraper' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Web Scraper in development...</p>}
                   {selectedTool === 'email-search' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Email Search in development...</p>}
                   {selectedTool === 'username-search' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Username Search in development...</p>}
+                  {selectedTool === 'whois-lookup' && <WhoisLookup />}
+                  {selectedTool === 'web-search' && <WebSearch />}
+                  {selectedTool === 'leak-search' && <LeakSearch />}
+                  {selectedTool === 'fake-info' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Fake Info Generator in development...</p>}
+                  {selectedTool === 'wifi-finder' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Wi-Fi Finder in development...</p>}
+                  {selectedTool === 'wifi-vault' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Wi-Fi Vault in development...</p>}
+                  {selectedTool === 'dirbuster' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Dir Buster in development...</p>}
+                  {selectedTool === 'local-users' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Local Users in development...</p>}
+                  {selectedTool === 'caesar-cipher' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Caesar Cipher in development...</p>}
+                  {selectedTool === 'basexx' && <BaseXX />}
                 </div>
               </div>
             </div>
