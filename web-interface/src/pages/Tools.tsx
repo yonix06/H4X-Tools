@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import IpLookup from '../components/tools/IpLookup';
 
 interface Tool {
   id: string;
@@ -21,7 +22,7 @@ const Tools: React.FC = () => {
     {
       id: 'ip-lookup',
       name: 'IP Lookup',
-      description: 'Rechercher des informations sur une adresse IP',
+      description: 'Look up detailed information about an IP address',
       category: 'Network',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -32,7 +33,7 @@ const Tools: React.FC = () => {
     {
       id: 'port-scanner',
       name: 'Port Scanner',
-      description: 'Scanner les ports ouverts sur un hôte',
+      description: 'Scan open ports on a remote host',
       category: 'Network',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,7 +44,7 @@ const Tools: React.FC = () => {
     {
       id: 'web-scraper',
       name: 'Web Scraper',
-      description: 'Extraire des données de pages web',
+      description: 'Extract data from web pages',
       category: 'Web',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,7 +55,7 @@ const Tools: React.FC = () => {
     {
       id: 'email-search',
       name: 'Email Search',
-      description: 'Rechercher des informations sur une adresse email',
+      description: 'Search for information about an email address',
       category: 'Investigation',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,7 +66,7 @@ const Tools: React.FC = () => {
     {
       id: 'username-search',
       name: 'Username Search',
-      description: 'Rechercher un nom d&apos;utilisateur sur différentes plateformes',
+      description: 'Search for a username across different platforms',
       category: 'Investigation',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -93,16 +94,16 @@ const Tools: React.FC = () => {
   return (
     <div className={`flex-1 h-full overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="h-full flex flex-col">
-        {/* Header avec barre de recherche */}
+        {/* Header with search bar */}
         <div className={`p-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
           <div className="max-w-4xl mx-auto">
             <h1 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Outils disponibles
+              Available Tools
             </h1>
             <div className="relative">
               <input
                 type="search"
-                placeholder="Rechercher un outil..."
+                placeholder="Search for a tool..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`
@@ -129,7 +130,7 @@ const Tools: React.FC = () => {
           </div>
         </div>
 
-        {/* Contenu principal */}
+        {/* Main content */}
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-4xl mx-auto">
             {categories.map(category => {
@@ -179,7 +180,7 @@ const Tools: React.FC = () => {
           </div>
         </div>
 
-        {/* Zone de l'outil sélectionné */}
+        {/* Selected tool area */}
         {selectedTool && (
           <div className={`
             fixed inset-0 z-50 flex items-center justify-center p-4
@@ -190,28 +191,35 @@ const Tools: React.FC = () => {
               ${isDark ? 'bg-gray-800' : 'bg-white'}
               p-6 shadow-xl animate-fade-in
             `}>
-              <div className="flex justify-between items-start mb-6">
-                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {tools.find(t => t.id === selectedTool)?.name}
-                </h2>
-                <button
-                  onClick={() => setSelectedTool(null)}
-                  className={`
-                    p-2 rounded-lg hover:bg-gray-100
-                    ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
-                  `}
-                >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Contenu de l'outil */}
-              <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                  Interface de l'outil en cours de développement...
-                </p>
+              <div className="h-full flex flex-col">
+                <div className="flex justify-between items-start mb-6">
+                  <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {tools.find(t => t.id === selectedTool)?.name}
+                  </h2>
+                  <button
+                    onClick={() => setSelectedTool(null)}
+                    className={`
+                      p-2 rounded-lg transition-colors
+                      ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
+                    `}
+                  >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Tool content */}
+                <div className={`
+                  flex-1 rounded-lg overflow-hidden
+                  ${isDark ? 'bg-gray-700' : 'bg-gray-100'}
+                `}>
+                  {selectedTool === 'ip-lookup' && <IpLookup />}
+                  {selectedTool === 'port-scanner' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Port Scanner in development...</p>}
+                  {selectedTool === 'web-scraper' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Web Scraper in development...</p>}
+                  {selectedTool === 'email-search' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Email Search in development...</p>}
+                  {selectedTool === 'username-search' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Username Search in development...</p>}
+                </div>
               </div>
             </div>
           </div>
