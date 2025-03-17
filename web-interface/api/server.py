@@ -64,7 +64,9 @@ tools = {
     'local_user_enum': import_tool('local_user_enum', 'local_user_enum'),
     'caesar_cipher': import_tool('caesar_cipher', 'caesar_cipher'),
     'basexx': import_tool('basexx', 'basexx'),
-    'snort_ids': import_tool('snort_ids', 'snort_ids')
+    'snort_ids': import_tool('snort_ids', 'snort_ids'),
+    'ddos_detector': import_tool('ddos_detector', 'ddos_detector'),
+    'vuln_scanner': import_tool('vuln_scanner', 'vuln_scanner')
 }
 
 def execute_snort_ids(data):
@@ -102,6 +104,39 @@ def execute_leak_search(data):
     search = tools['leak_search']['module'].Scan(target)
     return search.__dict__
 
+def execute_ddos_detector(data):
+    """Executes the DDoS Detector tool."""
+    interface = data.get('interface')
+    threshold = data.get('threshold')
+    window = data.get('window')
+    log_file = data.get('log_file')
+
+    ddos_detector = tools['ddos_detector']['module'].DDoSDetector(
+        interface=interface,
+        threshold=threshold,
+        window=window,
+        log_file=log_file
+    )
+
+    if log_file:
+        return ddos_detector.analyze_log_file()
+    else:
+        duration = data.get('duration', 300)  # Default duration
+        return ddos_detector.start_monitoring(duration=duration)
+
+def execute_vuln_scanner(data):
+    """Executes the VulnScanner tool."""
+    target = data.get('target')
+    scan_type = data.get('scan_type', 'vuln')
+    intensity = data.get('intensity', 'normal')
+
+    vuln_scanner = tools['vuln_scanner']['module'].VulnScanner(
+        target=target,
+        scan_type=scan_type,
+        intensity=intensity
+    )
+    return vuln_scanner.start_scan()
+
 def execute_basexx(data):
     """Executes the BaseXX tool."""
     message = data.get('message')
@@ -118,7 +153,9 @@ TOOL_EXECUTORS = {
     'web-search': execute_web_search,
     'leak-search': execute_leak_search,
     'basexx': execute_basexx,
-    'snort-ids': execute_snort_ids
+    'snort-ids': execute_snort_ids,
+    'ddos-detector': execute_ddos_detector,
+    'vuln-scanner': execute_vuln_scanner
 }
 
 # Initialize security monitor

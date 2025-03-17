@@ -9,9 +9,10 @@ import BaseXX from '../components/tools/BaseXX';
 import CaesarCipher from '../components/tools/CaesarCipher';
 import FakeInfoGenerator from '../components/tools/FakeInfoGenerator';
 import PortScanner from '../components/tools/PortScanner';
+import SnortIDS from '../components/tools/SnortIDS';
 
 interface Tool {
-  id: string;
+  id: string
   name: string;
   description: string;
   category: string;
@@ -190,7 +191,18 @@ const Tools: React.FC = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
         </svg>
       ),
-    }
+    },
+    {
+      id: 'snort-ids',
+      name: 'Snort IDS',
+      description: 'Monitors network traffic using Snort IDS.',
+      category: 'Security',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0v2.236a11.422 11.422 0 01-2 9.21m2-9.21v2.236a11.422 11.422 0 002 9.21m-2-6.772a4 4 0 11-8 0 4 4 0 018 0zm0 0c1.503 0 2.757-0.79 3.464-2.06A9.092 9.092 0 0012 8.588M5.25 7.764c.98 1.58 2.03 3.024 3.126 4.316m-3.126-1.5A9.092 9.092 0 008.588 12M2.25 15a4.5 4.5 0 004.5 4.5H16.5a4.5 4.5 0 004.5-4.5M2.25 15h2.25m5.25 0H21.75" />
+        </svg>
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -346,6 +358,7 @@ const Tools: React.FC = () => {
                   {selectedTool === 'local-users' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Local Users in development...</p>}
                   {selectedTool === 'caesar-cipher' && <CaesarCipher />}
                   {selectedTool === 'basexx' && <BaseXX />}
+                  {selectedTool === 'snort-ids' && <SnortIDS />}
                 </div>
               </div>
             </div>
