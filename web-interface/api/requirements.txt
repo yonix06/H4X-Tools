@@ -36,3 +36,4 @@ imageio-ffmpeg==0.4.8
 proglog==0.1.10
 flask-migrate>=4.0.0
 gunicorn>=20.1.0
+netifaces>=0.11.0

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import os
 import sys
-
+import socket
+import netifaces  # We'll need to add this to requirements.txt
+import psutil
 from datetime import datetime
 from flask import request, jsonify
 
@@ -51,7 +53,7 @@ tools = {
     'phone_lookup': import_tool('phonenumber_lookup', 'phone_lookup'),
     'ip_lookup': import_tool('ip_lookup', 'ip_lookup'),
     'port_scanner': import_tool('port_scanner', 'port_scanner'),
-    'username_search': import_tool('search_username', 'search_username'),
+    'username_search': import_tool('search_username', 'username_search'),
     'cybercrime_int': import_tool('cybercrime_int', 'cybercrime_int'),
     'email_search': import_tool('email_search', 'email_search'),
     'webhook_spammer': import_tool('webhook_spammer', 'webhook_spammer'),
@@ -218,6 +220,44 @@ def execute_tool(tool_id):
             'status': 'error',
             'message': str(e),
             'result_id': error_result.id
+        }), 500
+
+@app.route('/api/network/interfaces', methods=['GET'])
+def get_network_interfaces():
+    """Get all available network interfaces"""
+    try:
+        interfaces = []
+        
+        # Get all network interfaces using netifaces
+        if_names = netifaces.interfaces()
+        
+        for if_name in if_names:
+            # Skip loopback interface
+            if (if_name == 'lo' or if_name.startswith('lo')):
+                continue
+                
+            # Only add interfaces that are up and have an IPv4 address
+            addrs = netifaces.ifaddresses(if_name)
+            if netifaces.AF_INET in addrs:
+                interfaces.append(if_name)
+        
+        # If no interfaces found with netifaces, try with psutil
+        if not interfaces:
+            net_stats = psutil.net_if_stats()
+            for if_name, stats in net_stats.items():
+                if if_name != 'lo' and stats.isup:
+                    interfaces.append(if_name)
+        
+        return jsonify({
+            'status': 'success',
+            'data': interfaces,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f"Error getting network interfaces: {str(e)}",
+            'timestamp': datetime.now().isoformat()
         }), 500
 
 @app.route('/api/investigations', methods=['GET'])
@@ -392,12 +432,6 @@ def unban_ip():
 @app.route('/api/security/events', methods=['GET'])
 def security_events():
     events = SecurityEvent.query.order_by(SecurityEvent.timestamp.desc()).limit(100).all()
-    return jsonify({
-        "status": "success",
-        "data": [event.to_dict() for event in events],
-        "timestamp": datetime.now().isoformat()
-    })
-
     return jsonify({
         "status": "success",
         "data": [event.to_dict() for event in events],
