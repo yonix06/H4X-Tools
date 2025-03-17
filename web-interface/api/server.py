@@ -63,8 +63,20 @@ tools = {
     'dirbuster': import_tool('dirbuster', 'dirbuster'),
     'local_user_enum': import_tool('local_user_enum', 'local_user_enum'),
     'caesar_cipher': import_tool('caesar_cipher', 'caesar_cipher'),
-    'basexx': import_tool('basexx', 'basexx')
+    'basexx': import_tool('basexx', 'basexx'),
+    'snort_ids': import_tool('snort_ids', 'snort_ids')
 }
+
+def execute_snort_ids(data):
+    """Executes the Snort IDS tool."""
+    interface = data.get('interface')
+    duration = data.get('duration')
+    if not interface:
+        raise ValueError('Interface is required')
+    if not duration:
+        duration = 60  # Default duration
+    snort = tools['snort_ids']['module'].SnortController(interface=interface)
+    return snort.start_monitoring(duration=duration)
 
 def execute_web_search(data):
     """Executes the Web Search tool."""
@@ -106,6 +118,7 @@ TOOL_EXECUTORS = {
     'web-search': execute_web_search,
     'leak-search': execute_leak_search,
     'basexx': execute_basexx,
+    'snort-ids': execute_snort_ids
 }
 
 # Initialize security monitor
