@@ -12,5 +12,6 @@
         "**/.trunk/*out/": true,
         "**/.trunk/*plugins/": true
     },
-    "explorerExclude.backup": {}
+    "explorerExclude.backup": {},
+    "python.analysis.typeCheckingMode": "standard"
 }
