@@ -132,7 +132,7 @@ const CaesarCipher: React.FC = () => {
           Caesar Cipher
         </h2>
         <p className={`mb-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-          Encrypt, decrypt, or bruteforce a message using Caesar's cipher.
+          Encrypt, decrypt, or bruteforce a message using Caesar&apos;s cipher.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
 // Tool category definitions
-const TOOL_CATEGORIES = {
+type CategoryKey = 'Network' | 'Web' | 'Investigation' | 'System' | 'Cryptography' | 'Utilities';
+
+const TOOL_CATEGORIES: Record<CategoryKey, { icon: JSX.Element; color: string }> = {
   "Network": {
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,7 +58,16 @@ const TOOL_CATEGORIES = {
 };
 
 // Tool definitions
-const TOOLS = [
+interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  category: CategoryKey;
+  path: string;
+  highlight?: boolean;
+}
+
+const TOOLS: Tool[] = [
   {
     id: 'ip-lookup',
     name: 'IP Lookup',
