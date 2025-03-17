@@ -1,62 +1,90 @@
-import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import LoadingSpinner from "../LoadingSpinner";
+import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
+import LoadingSpinner from '../LoadingSpinner';
+
+interface VulnScanResult {
+  status: string;
+  target: string;
+  start_time: string;
+  end_time: string;
+  scan_type: string;
+  vulnerabilities: Vulnerability[];
+  open_ports: PortInfo[];
+  services: ServiceInfo[];
+  os_info: OSInfo | null;
+  scan_stats: ScanStats;
+  errors: string[];
+}
 
 interface Vulnerability {
   id: string;
-  port: string;
-  service: string;
-  host: string;
-  title: string;
-  output: string;
-  cve_ids: string[];
-  severity: string;
-  severity_score: number;
+  name: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low' | 'Info';
+  description: string;
+  affected_component: string;
+  cve_id?: string;
+  cvss_score?: number;
+  references?: string[];
+  solution?: string;
 }
 
-interface VulnScannerResult {
-  status: string;
-  target: string;
-  scan_type: string;
-  intensity: string;
-  vulnerabilities: Vulnerability[];
-  open_ports: Array<{
-    port: string;
-    protocol: string;
-    host: string;
-  }>;
-  services: Record<string, {
-    name: string;
-    product: string;
-    version: string;
-  }>;
-  os_detection: Record<string, Array<{
-    name: string;
-    accuracy: string;
-  }>>;
-  stats: {
-    duration: string;
-    nmap_version?: string;
-  };
-  errors: string[];
+interface PortInfo {
+  port: number;
+  protocol: string;
+  state: string;
+  service: string;
+  version?: string;
+}
+
+interface ServiceInfo {
+  name: string;
+  version?: string;
+  product?: string;
+  cpe?: string;
+  extra_info?: string;
+}
+
+interface OSInfo {
+  name: string;
+  version?: string;
+  type?: string;
+  cpe?: string;
+  confidence?: number;
+}
+
+interface ScanStats {
+  total_hosts: number;
+  total_ports: number;
+  open_ports: number;
+  filtered_ports: number;
+  closed_ports: number;
+  duration: number;
+  start_time: string;
+  end_time: string;
 }
 
 const VulnScanner: React.FC = () => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const [target, setTarget] = useState("");
-  const [scanType, setScanType] = useState("vuln");
-  const [intensity, setIntensity] = useState("normal");
-  const [result, setResult] = useState<VulnScannerResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const isDark = theme === 'dark';
+  
+  const [target, setTarget] = useState<string>('');
+  const [scanType, setScanType] = useState<string>('vuln');
+  const [intensity, setIntensity] = useState<string>('normal');
+  const [results, setResults] = useState<VulnScanResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!target.trim()) return;
-
-    setLoading(true);
+    
+    if (!target) {
+      setError("Please enter a target IP or hostname");
+      return;
+    }
+    
+    setIsLoading(true);
     setError(null);
+    setResults(null);
 
     try {
       const response = await fetch("/api/tools/vuln-scanner", {
@@ -64,8 +92,8 @@ const VulnScanner: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          target, 
+        body: JSON.stringify({
+          target,
           scan_type: scanType,
           intensity
         }),
@@ -78,59 +106,82 @@ const VulnScanner: React.FC = () => {
       }
 
       if (data.status === "error") {
-        throw new Error(data.message);
+        throw new Error(data.message || data.data?.errors?.[0] || "Unknown error occurred");
       }
 
-      setResult(data.data);
+      setResults(data.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      console.error(err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const getSeverityColor = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'critical':
-        return isDark ? "bg-red-900 text-red-100" : "bg-red-200 text-red-900";
-      case 'high':
-        return isDark ? "bg-red-800/70 text-red-100" : "bg-red-100 text-red-900";
-      case 'medium':
-        return isDark ? "bg-yellow-800/70 text-yellow-100" : "bg-yellow-100 text-yellow-900";
-      case 'low':
-        return isDark ? "bg-blue-800/70 text-blue-100" : "bg-blue-100 text-blue-900";
+    switch (severity) {
+      case 'Critical':
+        return isDark ? 'text-red-400' : 'text-red-600';
+      case 'High':
+        return isDark ? 'text-orange-400' : 'text-orange-600';
+      case 'Medium':
+        return isDark ? 'text-yellow-400' : 'text-yellow-600';
+      case 'Low':
+        return isDark ? 'text-blue-400' : 'text-blue-600';
+      case 'Info':
+        return isDark ? 'text-gray-400' : 'text-gray-600';
       default:
-        return isDark ? "bg-gray-700 text-gray-100" : "bg-gray-200 text-gray-900";
+        return isDark ? 'text-gray-400' : 'text-gray-600';
+    }
+  };
+
+  const getSeverityBgColor = (severity: string) => {
+    switch (severity) {
+      case 'Critical':
+        return isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-100 text-red-800';
+      case 'High':
+        return isDark ? 'bg-orange-900/30 text-orange-300' : 'bg-orange-100 text-orange-800';
+      case 'Medium':
+        return isDark ? 'bg-yellow-900/30 text-yellow-300' : 'bg-yellow-100 text-yellow-800';
+      case 'Low':
+        return isDark ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-800';
+      case 'Info':
+        return isDark ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-100 text-gray-800';
+      default:
+        return isDark ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className={`p-4 rounded-lg ${isDark ? "bg-gray-800" : "bg-white"} border ${isDark ? "border-gray-700" : "border-gray-300"}`}>
-        <h2 className={`text-xl font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>Scanner de Vulnérabilités</h2>
-        <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-          Analyse une adresse IP, un hôte ou un réseau pour détecter les vulnérabilités connues.
+    <div className="p-6 space-y-6">
+      <div className={`
+        p-4 rounded-lg border 
+        ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}
+      `}>
+        <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Vulnerability Scanner
+        </h2>
+        <p className={`mb-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          Scan for security vulnerabilities and open ports on network hosts.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label 
               htmlFor="target" 
-              className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}
+              className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
             >
-              Cible
+              Target
             </label>
             <input
               id="target"
               type="text"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              placeholder="192.168.1.1, example.com, 10.0.0.0/24"
+              placeholder="IP address or hostname (e.g. 192.168.1.1 or example.com)"
               className="input-field"
             />
-            <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              Adresse IP, nom d'hôte ou plage d'adresses IP (CIDR)
+            <p className={`mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Single IP, hostname, or CIDR notation (e.g., 192.168.1.0/24)
             </p>
           </div>
 
@@ -138,9 +189,9 @@ const VulnScanner: React.FC = () => {
             <div>
               <label 
                 htmlFor="scanType" 
-                className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
               >
-                Type de scan
+                Scan Type
               </label>
               <select
                 id="scanType"
@@ -148,18 +199,23 @@ const VulnScanner: React.FC = () => {
                 onChange={(e) => setScanType(e.target.value)}
                 className="input-field"
               >
-                <option value="basic">Basique (ports et services)</option>
-                <option value="vuln">Vulnérabilités</option>
-                <option value="all">Complet (tous les tests)</option>
+                <option value="vuln">Vulnerability Scan</option>
+                <option value="port">Port Scan</option>
+                <option value="service">Service Detection</option>
+                <option value="os">OS Detection</option>
+                <option value="full">Full Scan (Comprehensive)</option>
               </select>
+              <p className={`mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Type of scan to perform
+              </p>
             </div>
 
             <div>
               <label 
                 htmlFor="intensity" 
-                className={`block text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
               >
-                Intensité
+                Scan Intensity
               </label>
               <select
                 id="intensity"
@@ -167,256 +223,352 @@ const VulnScanner: React.FC = () => {
                 onChange={(e) => setIntensity(e.target.value)}
                 className="input-field"
               >
-                <option value="light">Légère (discrète)</option>
-                <option value="normal">Normale</option>
-                <option value="aggressive">Agressive (rapide mais bruyante)</option>
+                <option value="light">Light (Fast but less thorough)</option>
+                <option value="normal">Normal (Balanced)</option>
+                <option value="aggressive">Aggressive (Thorough but slow)</option>
               </select>
+              <p className={`mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Determines scan speed and thoroughness
+              </p>
             </div>
           </div>
 
-          <div>
+          <div className="flex justify-end">
             <button
               type="submit"
-              disabled={loading || !target.trim()}
+              disabled={isLoading || !target.trim()}
               className="btn-primary"
             >
-              {loading ? <LoadingSpinner size="small" /> : "Lancer le scan"}
+              {isLoading ? (
+                <LoadingSpinner size="small" />
+              ) : (
+                "Start Scan"
+              )}
             </button>
           </div>
         </form>
       </div>
 
       {error && (
-        <div className={`p-4 rounded-lg ${isDark ? "bg-red-900/50" : "bg-red-100"}`}>
-          <p className={`text-sm ${isDark ? "text-red-200" : "text-red-800"}`}>{error}</p>
+        <div className={`p-4 rounded-lg ${isDark ? 'bg-red-900/50' : 'bg-red-100'}`}>
+          <p className={`text-sm ${isDark ? 'text-red-200' : 'text-red-800'}`}>{error}</p>
         </div>
       )}
 
-      {loading && (
-        <div className={`p-6 rounded-lg text-center ${isDark ? "bg-gray-800" : "bg-white"} border ${isDark ? "border-gray-700" : "border-gray-300"}`}>
-          <LoadingSpinner size="large" />
-          <p className={`mt-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-            Scan en cours... Cela peut prendre plusieurs minutes selon la cible et le type de scan.
-          </p>
-        </div>
-      )}
-
-      {result && !loading && (
-        <div className={`rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} overflow-hidden`}>
-          <div className={`px-4 py-3 border-b ${isDark ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"}`}>
-            <div className="flex justify-between items-center">
-              <h3 className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                Résultats pour {result.target}
+      {results && (
+        <div className="space-y-6">
+          {/* Summary Card */}
+          <div className={`
+            rounded-lg border
+            ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+            overflow-hidden
+          `}>
+            <div className={`px-4 py-3 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+              <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Scan Summary
               </h3>
-              <span className={`px-2 py-1 text-xs rounded-full
-                ${result.status === "completed" 
-                  ? (isDark ? "bg-green-900/50 text-green-200" : "bg-green-100 text-green-800")
-                  : (isDark ? "bg-yellow-900/50 text-yellow-200" : "bg-yellow-100 text-yellow-800")
-                }`}>
-                {result.status}
-              </span>
+              <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                {new Date(results.start_time).toLocaleString()} - {new Date(results.end_time).toLocaleString()}
+                {results.scan_stats && ` (${Math.round(results.scan_stats.duration)} seconds)`}
+              </div>
+            </div>
+            
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`
+                  p-4 rounded-lg
+                  ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}
+                `}>
+                  <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Target
+                  </div>
+                  <div className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {results.target}
+                  </div>
+                </div>
+                
+                <div className={`
+                  p-4 rounded-lg
+                  ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}
+                `}>
+                  <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Scan Type
+                  </div>
+                  <div className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {results.scan_type.charAt(0).toUpperCase() + results.scan_type.slice(1)}
+                  </div>
+                </div>
+                
+                <div className={`
+                  p-4 rounded-lg
+                  ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}
+                `}>
+                  <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Vulnerabilities
+                  </div>
+                  <div className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {results.vulnerabilities.length}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="p-4 space-y-6">
-            {/* Sommaire */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
-                <div className={`text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  Ports ouverts
-                </div>
-                <div className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                  {result.open_ports?.length || 0}
-                </div>
-              </div>
-              
-              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
-                <div className={`text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  Services détectés
-                </div>
-                <div className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                  {Object.keys(result.services || {}).length}
-                </div>
-              </div>
-              
-              <div className={`p-3 rounded-lg ${isDark ? "bg-red-900/50" : "bg-red-50"}`}>
-                <div className={`text-sm font-medium mb-1 ${isDark ? "text-red-300" : "text-red-600"}`}>
-                  Vulnérabilités
-                </div>
-                <div className={`text-xl font-bold ${isDark ? "text-red-200" : "text-red-700"}`}>
-                  {result.vulnerabilities?.length || 0}
-                </div>
-              </div>
-              
-              <div className={`p-3 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
-                <div className={`text-sm font-medium mb-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  Durée du scan
-                </div>
-                <div className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                  {result.stats?.duration || "N/A"}
-                </div>
-              </div>
-            </div>
 
-            {/* Vulnérabilités */}
-            {result.vulnerabilities && result.vulnerabilities.length > 0 ? (
-              <div>
-                <h4 className={`text-lg font-medium mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Vulnérabilités détectées
-                </h4>
-                <div className="space-y-3">
-                  {result.vulnerabilities
-                    .sort((a, b) => b.severity_score - a.severity_score)
-                    .map((vuln, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 rounded-lg border ${isDark ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"}`}
-                    >
-                      <div className="flex flex-wrap justify-between gap-2">
-                        <h5 className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                          {vuln.title || vuln.id}
-                        </h5>
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${getSeverityColor(vuln.severity)}`}>
-                          {vuln.severity}
-                        </span>
+          {/* Vulnerabilities */}
+          {results.vulnerabilities.length > 0 ? (
+            <div className={`
+              rounded-lg border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+              overflow-hidden
+            `}>
+              <div className={`px-4 py-3 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Vulnerabilities ({results.vulnerabilities.length})
+                </h3>
+              </div>
+              
+              <div className="p-0">
+                <div className="divide-y divide-gray-700">
+                  {results.vulnerabilities.map((vuln, index) => (
+                    <div key={vuln.id} className={`p-4 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-2">
+                        <div>
+                          <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {vuln.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`
+                              inline-flex text-xs px-2 py-0.5 rounded-full
+                              ${getSeverityBgColor(vuln.severity)}
+                            `}>
+                              {vuln.severity}
+                            </span>
+                            {vuln.cve_id && (
+                              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {vuln.cve_id}
+                              </span>
+                            )}
+                            {vuln.cvss_score && (
+                              <span className={`text-xs font-medium ${getSeverityColor(vuln.severity)}`}>
+                                CVSS: {vuln.cvss_score.toFixed(1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2 md:mt-0`}>
+                          Affects: {vuln.affected_component}
+                        </div>
                       </div>
                       
-                      {vuln.cve_ids && vuln.cve_ids.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {vuln.cve_ids.map((cve, cveIdx) => (
-                            <span 
-                              key={cveIdx} 
-                              className={`px-2 py-0.5 text-xs rounded-full 
-                                ${isDark ? "bg-purple-900/50 text-purple-200" : "bg-purple-100 text-purple-800"}`
-                              }
-                            >
-                              {cve}
-                            </span>
-                          ))}
+                      <div className={`text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {vuln.description}
+                      </div>
+                      
+                      {vuln.solution && (
+                        <div className="mt-3">
+                          <h5 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Solution:
+                          </h5>
+                          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {vuln.solution}
+                          </p>
                         </div>
                       )}
                       
-                      <div className={`mt-2 text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <span className="font-medium">Port:</span> {vuln.port}
-                          </div>
-                          <div>
-                            <span className="font-medium">Service:</span> {vuln.service}
-                          </div>
+                      {vuln.references && vuln.references.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            References:
+                          </h5>
+                          <ul className={`text-xs mt-1 space-y-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {vuln.references.map((ref, i) => (
+                              <li key={i}>
+                                <a 
+                                  href={ref} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className={`text-blue-500 hover:underline`}
+                                >
+                                  {ref}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        
-                        {vuln.output && (
-                          <div className="mt-2">
-                            <details>
-                              <summary className="cursor-pointer font-medium hover:underline">Détails</summary>
-                              <div className={`mt-2 p-2 rounded text-xs font-mono whitespace-pre-wrap overflow-x-auto ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
-                                {vuln.output}
-                              </div>
-                            </details>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
-            ) : (
-              <div className={`p-4 rounded-lg text-center ${isDark ? "bg-green-900/20" : "bg-green-50"}`}>
-                <p className={`${isDark ? "text-green-300" : "text-green-700"}`}>
-                  Aucune vulnérabilité n'a été détectée. Cela ne garantit pas l'absence de vulnérabilités.
-                </p>
-              </div>
-            )}
+            </div>
+          ) : (
+            <div className={`
+              p-4 rounded-lg text-center
+              ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-gray-50 border border-gray-200'}
+            `}>
+              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                No vulnerabilities were detected during the scan.
+              </p>
+            </div>
+          )}
 
-            {/* Ports Ouverts */}
-            {result.open_ports && result.open_ports.length > 0 && (
-              <div>
-                <h4 className={`text-lg font-medium mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Ports ouverts
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {result.open_ports.map((port, idx) => {
-                    const portKey = `${port.host}:${port.port}/${port.protocol}`;
-                    const service = result.services[portKey];
+          {/* Open Ports */}
+          {results.open_ports && results.open_ports.length > 0 && (
+            <div className={`
+              rounded-lg border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+              overflow-hidden
+            `}>
+              <div className={`px-4 py-3 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Open Ports & Services ({results.open_ports.length})
+                </h3>
+              </div>
+              
+              <div className="p-0">
+                <div className="overflow-x-auto">
+                  <table className={`min-w-full divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                    <thead className={isDark ? 'bg-gray-700/50' : 'bg-gray-50'}>
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider">Port</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider">Protocol</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider">State</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider">Service</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider">Version</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                      {results.open_ports.map((port, index) => (
+                        <tr key={index} className={isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}>
+                          <td className="px-4 py-4">
+                            <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {port.port}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {port.protocol.toUpperCase()}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {port.state}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {port.service}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {port.version || '-'}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* OS Detection */}
+          {results.os_info && (
+            <div className={`
+              rounded-lg border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+              overflow-hidden
+            `}>
+              <div className={`px-4 py-3 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Operating System Detection
+                </h3>
+              </div>
+              
+              <div className="p-4">
+                <div className={`
+                  p-4 rounded-lg
+                  ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}
+                `}>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Name
+                      </div>
+                      <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {results.os_info.name}
+                      </div>
+                    </div>
                     
-                    return (
-                      <div 
-                        key={idx}
-                        className={`p-3 rounded-lg border ${isDark ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"}`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                            {port.port}/{port.protocol}
-                          </div>
-                          {service && (
-                            <span className={`px-2 py-0.5 text-xs rounded-full
-                              ${isDark ? "bg-blue-900/50 text-blue-200" : "bg-blue-100 text-blue-800"}`}>
-                              {service.name}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {service && (service.product || service.version) && (
-                          <div className={`mt-1 text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                            {service.product} {service.version}
-                          </div>
-                        )}
+                    <div>
+                      <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Version
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* OS Detection */}
-            {result.os_detection && Object.keys(result.os_detection).length > 0 && (
-              <div>
-                <h4 className={`text-lg font-medium mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Détection de système d'exploitation
-                </h4>
-                <div className="space-y-3">
-                  {Object.entries(result.os_detection).map(([host, matches], idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 rounded-lg border ${isDark ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"}`}
-                    >
-                      <div className={`font-medium mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-                        Hôte: {host}
-                      </div>
-                      <div className="space-y-1">
-                        {matches.map((match, matchIdx) => (
-                          <div key={matchIdx} className="flex justify-between">
-                            <span className={`${isDark ? "text-gray-300" : "text-gray-600"}`}>{match.name}</span>
-                            <span className={`px-2 py-0.5 text-xs rounded-full
-                              ${isDark ? "bg-gray-600 text-gray-200" : "bg-gray-200 text-gray-800"}`}>
-                              Précision: {match.accuracy}%
-                            </span>
-                          </div>
-                        ))}
+                      <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {results.os_info.version || '-'}
                       </div>
                     </div>
-                  ))}
+                    
+                    <div>
+                      <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Type
+                      </div>
+                      <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {results.os_info.type || '-'}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Confidence
+                      </div>
+                      <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {results.os_info.confidence ? `${results.os_info.confidence}%` : '-'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {results.os_info.cpe && (
+                    <div className="mt-3">
+                      <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        CPE
+                      </div>
+                      <div className={`text-sm font-mono ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {results.os_info.cpe}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Erreurs */}
-            {result.errors && result.errors.length > 0 && (
-              <div>
-                <h4 className={`text-lg font-medium mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Erreurs
-                </h4>
-                <div className={`p-3 rounded-lg ${isDark ? "bg-red-900/30" : "bg-red-50"}`}>
-                  <ul className={`list-disc pl-5 ${isDark ? "text-red-300" : "text-red-700"}`}>
-                    {result.errors.map((err, idx) => (
-                      <li key={idx}>{err}</li>
-                    ))}
-                  </ul>
-                </div>
+          {/* Errors & Warnings */}
+          {results.errors && results.errors.length > 0 && (
+            <div className={`
+              rounded-lg border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+              overflow-hidden
+            `}>
+              <div className={`px-4 py-3 border-b ${isDark ? 'border-gray-700 bg-red-900/30' : 'border-gray-200 bg-red-50'}`}>
+                <h3 className={`font-medium ${isDark ? 'text-white' : 'text-red-800'}`}>
+                  Errors & Warnings
+                </h3>
               </div>
-            )}
-          </div>
+              
+              <div className="p-4">
+                <ul className="space-y-2">
+                  {results.errors.map((error, index) => (
+                    <li key={index} className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

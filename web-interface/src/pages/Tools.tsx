@@ -10,6 +10,8 @@ import CaesarCipher from '../components/tools/CaesarCipher';
 import FakeInfoGenerator from '../components/tools/FakeInfoGenerator';
 import PortScanner from '../components/tools/PortScanner';
 import SnortIDS from '../components/tools/SnortIDS';
+import DDoSDetector from '../components/tools/DDoSDetector';
+import VulnScanner from '../components/tools/VulnScanner';
 
 interface Tool {
   id: string
@@ -203,6 +205,28 @@ const Tools: React.FC = () => {
         </svg>
       ),
     },
+    {
+      id: 'ddos-detector',
+      name: 'DDoS Detector',
+      description: 'Detect and analyze DDoS attacks on your network.',
+      category: 'Security',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'vuln-scanner',
+      name: 'Vulnerability Scanner',
+      description: 'Scan for security vulnerabilities in network hosts.',
+      category: 'Security',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -359,6 +383,8 @@ const Tools: React.FC = () => {
                   {selectedTool === 'caesar-cipher' && <CaesarCipher />}
                   {selectedTool === 'basexx' && <BaseXX />}
                   {selectedTool === 'snort-ids' && <SnortIDS />}
+                  {selectedTool === 'ddos-detector' && <DDoSDetector />}
+                  {selectedTool === 'vuln-scanner' && <VulnScanner />}
                 </div>
               </div>
             </div>
