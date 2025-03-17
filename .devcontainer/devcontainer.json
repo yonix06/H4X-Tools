@@ -69,7 +69,9 @@
 				"ms-windows-ai-studio.windows-ai-studio",
 				"LittleFoxTeam.vscode-python-test-adapter",
 				"Jota0222.multi-formatter",
-				"foxundermoon.shell-format"
+				"foxundermoon.shell-format",
+				"ms-vscode.vscode-copilot-data-analysis",
+				"AutomataLabs.copilot-mcp"
 			]
 		}
 	}
