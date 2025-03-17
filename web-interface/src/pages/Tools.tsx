@@ -6,6 +6,9 @@ import WhoisLookup from '../components/tools/WhoisLookup';
 import WebSearch from '../components/tools/WebSearch';
 import LeakSearch from '../components/tools/LeakSearch';
 import BaseXX from '../components/tools/BaseXX';
+import CaesarCipher from '../components/tools/CaesarCipher';
+import FakeInfoGenerator from '../components/tools/FakeInfoGenerator';
+import PortScanner from '../components/tools/PortScanner';
 
 interface Tool {
   id: string;
@@ -329,19 +332,19 @@ const Tools: React.FC = () => {
                   ${isDark ? 'bg-gray-700' : 'bg-gray-100'}
                 `}>
                   {selectedTool === 'ip-lookup' && <IpLookup />}
-                  {selectedTool === 'port-scanner' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Port Scanner in development...</p>}
+                  {selectedTool === 'port-scanner' && <PortScanner />}
                   {selectedTool === 'web-scraper' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Web Scraper in development...</p>}
                   {selectedTool === 'email-search' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Email Search in development...</p>}
                   {selectedTool === 'username-search' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Username Search in development...</p>}
                   {selectedTool === 'whois-lookup' && <WhoisLookup />}
                   {selectedTool === 'web-search' && <WebSearch />}
                   {selectedTool === 'leak-search' && <LeakSearch />}
-                  {selectedTool === 'fake-info' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Fake Info Generator in development...</p>}
+                  {selectedTool === 'fake-info' && <FakeInfoGenerator />}
                   {selectedTool === 'wifi-finder' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Wi-Fi Finder in development...</p>}
                   {selectedTool === 'wifi-vault' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Wi-Fi Vault in development...</p>}
                   {selectedTool === 'dirbuster' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Dir Buster in development...</p>}
                   {selectedTool === 'local-users' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Local Users in development...</p>}
-                  {selectedTool === 'caesar-cipher' && <p className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Caesar Cipher in development...</p>}
+                  {selectedTool === 'caesar-cipher' && <CaesarCipher />}
                   {selectedTool === 'basexx' && <BaseXX />}
                 </div>
               </div>

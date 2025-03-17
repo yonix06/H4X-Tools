@@ -60,6 +60,11 @@ const PortScanner: React.FC = () => {
     }
   };
 
+  const isValidPortRange = (range: string): boolean => {
+    const regex = /^(\d+)(?:-(\d+))?(?:,(\d+)(?:-(\d+))?)*$/;
+    return regex.test(range);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className={`
@@ -105,11 +110,16 @@ const PortScanner: React.FC = () => {
                 value={portRange}
                 onChange={(e) => setPortRange(e.target.value)}
                 placeholder="e.g., 1-1000 or 80,443,3306"
-                className="input-field"
+                className={`input-field ${!isValidPortRange(portRange) ? 'border-red-500' : ''}`}
               />
               <p className={`mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 Specify range (e.g., 1-1000) or comma-separated list (e.g., 80,443,8080)
               </p>
+              {!isValidPortRange(portRange) && (
+                <p className="mt-1 text-xs text-red-500">
+                  Invalid port range format
+                </p>
+              )}
             </div>
 
             <div>
@@ -135,7 +145,7 @@ const PortScanner: React.FC = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={isLoading || !target.trim()}
+              disabled={isLoading || !target.trim() || !isValidPortRange(portRange)}
               className="btn-primary"
             >
               {isLoading ? <LoadingSpinner size="small" /> : "Scan Ports"}
@@ -271,6 +281,13 @@ const PortScanner: React.FC = () => {
                   <li>No exposed services found. Continue monitoring for changes.</li>
                 )}
               </ul>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-700">
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Note: This is a simplified port scan. For more detailed scans or vulnerability assessments,
+                professional security tools are recommended. Always scan only systems you have permission to test.
+              </p>
             </div>
           </div>
         </div>
